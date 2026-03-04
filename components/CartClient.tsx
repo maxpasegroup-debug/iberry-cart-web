@@ -11,15 +11,23 @@ export default function CartClient() {
   const [data, setData] = useState<CartResponse | null>(null);
   const [loading, setLoading] = useState(true);
 
-  async function loadCart() {
+  async function fetchCartData() {
     const res = await fetch("/api/cart", { cache: "no-store" });
     const payload = await res.json();
-    if (payload.ok) setData(payload.data);
-    setLoading(false);
+    if (!payload.ok) return null;
+    return payload.data as CartResponse;
   }
 
   useEffect(() => {
-    void loadCart();
+    let active = true;
+    void fetchCartData().then((cartData) => {
+      if (!active) return;
+      setData(cartData);
+      setLoading(false);
+    });
+    return () => {
+      active = false;
+    };
   }, []);
 
   async function updateItem(itemId: string, quantity: number) {
@@ -28,7 +36,8 @@ export default function CartClient() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ itemId, quantity }),
     });
-    await loadCart();
+    const cartData = await fetchCartData();
+    setData(cartData);
   }
 
   if (loading) {

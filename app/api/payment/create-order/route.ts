@@ -26,6 +26,40 @@ export async function POST(req: Request) {
 
     const order = await OrderModel.findById(parsed.data.orderId);
     if (!order) return errorResponse("Order not found", 404);
+    if (order.paymentStatus === "paid") {
+      return errorResponse("Order is already paid", 409);
+    }
+
+    const idempotencyKey = req.headers.get("x-idempotency-key")?.trim() || null;
+    if (idempotencyKey) {
+      const existingByKey = await PaymentModel.findOne({
+        order: order._id,
+        idempotencyKey,
+      });
+      if (existingByKey) {
+        return successResponse({
+          paymentId: existingByKey._id,
+          razorpayOrderId: existingByKey.providerOrderId,
+          amount: existingByKey.amount,
+          keyId: process.env.RAZORPAY_KEY_ID,
+          currency: existingByKey.currency,
+        });
+      }
+    }
+
+    const existingPayment = await PaymentModel.findOne({
+      order: order._id,
+      status: { $in: ["created", "authorized"] },
+    });
+    if (existingPayment) {
+      return successResponse({
+        paymentId: existingPayment._id,
+        razorpayOrderId: existingPayment.providerOrderId,
+        amount: existingPayment.amount,
+        keyId: process.env.RAZORPAY_KEY_ID,
+        currency: existingPayment.currency,
+      });
+    }
 
     const razorpay = razorpayClient();
     const providerOrder = await razorpay.orders.create({
@@ -41,6 +75,7 @@ export async function POST(req: Request) {
       providerOrderId: providerOrder.id,
       amount: order.total,
       currency: "INR",
+      idempotencyKey,
       status: "created",
       payload: providerOrder,
     });

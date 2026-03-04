@@ -6,6 +6,7 @@ const PaymentSchema = new Schema(
     provider: { type: String, required: true, default: "razorpay" },
     providerOrderId: { type: String, required: true, index: true },
     providerPaymentId: { type: String, default: null, index: true },
+    idempotencyKey: { type: String, default: null, index: true },
     signature: { type: String, default: null },
     amount: { type: Number, required: true },
     currency: { type: String, required: true, default: "INR" },
@@ -18,6 +19,14 @@ const PaymentSchema = new Schema(
     payload: { type: Schema.Types.Mixed, default: {} },
   },
   { timestamps: true },
+);
+
+PaymentSchema.index(
+  { order: 1, idempotencyKey: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { idempotencyKey: { $type: "string" } },
+  },
 );
 
 const PaymentModel = models.Payment || model("Payment", PaymentSchema);

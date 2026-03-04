@@ -1,17 +1,19 @@
 import { NextRequest } from "next/server";
-import { assertAdminRequest } from "@/lib/admin-auth";
+import { requireAdminApiUser } from "@/lib/admin-auth";
 import { connectToDatabase } from "@/lib/db";
 import { errorResponse, successResponse } from "@/lib/api-response";
 import { adminProductSchema } from "@/lib/validation";
 import ProductModel from "@/models/Product";
 
-export async function GET(req: NextRequest) {
-  if (!assertAdminRequest(req)) return errorResponse("Unauthorized", 401);
+export async function GET() {
+  const admin = await requireAdminApiUser();
+  if (!admin) return errorResponse("Unauthorized", 401);
 
   try {
     await connectToDatabase();
     const products = await ProductModel.find({})
       .populate("category", "name slug")
+      .populate("vendor", "name email status")
       .sort({ createdAt: -1 })
       .lean();
     return successResponse(products);
@@ -21,7 +23,8 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  if (!assertAdminRequest(req)) return errorResponse("Unauthorized", 401);
+  const admin = await requireAdminApiUser();
+  if (!admin) return errorResponse("Unauthorized", 401);
 
   try {
     await connectToDatabase();
@@ -32,7 +35,18 @@ export async function POST(req: NextRequest) {
       return errorResponse("Invalid product payload", 400, parsed.error.flatten());
     }
 
-    const product = await ProductModel.create(parsed.data);
+    const product = await ProductModel.create({
+      name: parsed.data.name,
+      slug: parsed.data.slug,
+      description: parsed.data.description,
+      price: parsed.data.price,
+      discountPrice: parsed.data.discountPrice ?? null,
+      stock: parsed.data.stock,
+      category: parsed.data.categoryId,
+      vendor: parsed.data.vendorId ?? null,
+      featured: parsed.data.featured,
+      image: parsed.data.image,
+    });
     return successResponse(product, "Product created", 201);
   } catch (error) {
     return errorResponse("Failed to create product", 500, String(error));
@@ -40,7 +54,8 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  if (!assertAdminRequest(req)) return errorResponse("Unauthorized", 401);
+  const admin = await requireAdminApiUser();
+  if (!admin) return errorResponse("Unauthorized", 401);
 
   try {
     await connectToDatabase();
@@ -53,7 +68,16 @@ export async function PATCH(req: NextRequest) {
       return errorResponse("Invalid update payload", 400, parsed.error.flatten());
     }
 
-    const updated = await ProductModel.findByIdAndUpdate(productId, parsed.data, { new: true });
+    const updateData: Record<string, unknown> = { ...parsed.data };
+    if (parsed.data.categoryId) {
+      updateData.category = parsed.data.categoryId;
+      delete updateData.categoryId;
+    }
+    if (parsed.data.vendorId !== undefined) {
+      updateData.vendor = parsed.data.vendorId ?? null;
+      delete updateData.vendorId;
+    }
+    const updated = await ProductModel.findByIdAndUpdate(productId, updateData, { new: true });
     if (!updated) return errorResponse("Product not found", 404);
     return successResponse(updated, "Product updated");
   } catch (error) {
@@ -62,7 +86,8 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  if (!assertAdminRequest(req)) return errorResponse("Unauthorized", 401);
+  const admin = await requireAdminApiUser();
+  if (!admin) return errorResponse("Unauthorized", 401);
 
   try {
     await connectToDatabase();

@@ -62,6 +62,7 @@ export const adminProductSchema = z.object({
   discountPrice: z.number().positive().optional().nullable(),
   stock: z.number().int().min(0),
   categoryId: z.string().min(1),
+  vendorId: z.string().optional().nullable(),
   featured: z.boolean().default(false),
   image: z.string().url(),
 });
@@ -70,4 +71,12 @@ export const adminCategorySchema = z.object({
   name: z.string().min(2),
   slug: z.string().min(2),
   image: z.string().url().optional().or(z.literal("")),
+});
+
+export const adminVendorSchema = z.object({
+  name: z.string().min(2),
+  email: z.string().email(),
+  status: z.enum(["pending", "active", "suspended"]).default("pending"),
+  dropshipping: z.boolean().default(true),
+  region: z.string().min(2).default("India"),
 });

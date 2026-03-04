@@ -20,7 +20,7 @@ async function getCartWithTotals(sessionId: string) {
   }
 
   const lines = cart.items
-    .map((item) => {
+    .map((item: { product: unknown; quantity: number }) => {
       const product = item.product as unknown as {
         price: number;
         discountPrice?: number | null;
@@ -45,7 +45,7 @@ export async function GET() {
     await connectToDatabase();
     const sessionId = await getOrCreateSessionId();
     const data = await getCartWithTotals(sessionId);
-    return successResponse(data);
+    return successResponse(JSON.parse(JSON.stringify(data)));
   } catch (error) {
     return errorResponse("Failed to fetch cart", 500, String(error));
   }
@@ -72,7 +72,9 @@ export async function POST(req: Request) {
       (await CartModel.findOne({ sessionId })) ??
       (await CartModel.create({ sessionId, items: [] }));
 
-    const existingItem = cart.items.find((item) => String(item.product) === String(product._id));
+    const existingItem = cart.items.find(
+      (item: { product: unknown }) => String(item.product) === String(product._id),
+    );
     if (existingItem) {
       existingItem.quantity += quantity;
     } else {
@@ -81,7 +83,7 @@ export async function POST(req: Request) {
     await cart.save();
 
     const data = await getCartWithTotals(sessionId);
-    return successResponse(data, "Item added to cart", 201);
+    return successResponse(JSON.parse(JSON.stringify(data)), "Item added to cart", 201);
   } catch (error) {
     return errorResponse("Failed to add item to cart", 500, String(error));
   }
@@ -113,7 +115,7 @@ export async function PATCH(req: Request) {
 
     await cart.save();
     const data = await getCartWithTotals(sessionId);
-    return successResponse(data, "Cart updated");
+    return successResponse(JSON.parse(JSON.stringify(data)), "Cart updated");
   } catch (error) {
     return errorResponse("Failed to update cart", 500, String(error));
   }

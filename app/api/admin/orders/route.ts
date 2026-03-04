@@ -1,11 +1,12 @@
 import { NextRequest } from "next/server";
-import { assertAdminRequest } from "@/lib/admin-auth";
+import { requireAdminApiUser } from "@/lib/admin-auth";
 import { connectToDatabase } from "@/lib/db";
 import { errorResponse, successResponse } from "@/lib/api-response";
 import OrderModel from "@/models/Order";
 
-export async function GET(req: NextRequest) {
-  if (!assertAdminRequest(req)) return errorResponse("Unauthorized", 401);
+export async function GET() {
+  const admin = await requireAdminApiUser();
+  if (!admin) return errorResponse("Unauthorized", 401);
 
   try {
     await connectToDatabase();
@@ -17,7 +18,8 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  if (!assertAdminRequest(req)) return errorResponse("Unauthorized", 401);
+  const admin = await requireAdminApiUser();
+  if (!admin) return errorResponse("Unauthorized", 401);
 
   try {
     await connectToDatabase();

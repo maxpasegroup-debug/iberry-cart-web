@@ -1,4 +1,5 @@
 import { Bell, Search, ShoppingCart } from "lucide-react";
+import Link from "next/link";
 
 export default function Header() {
   return (
@@ -12,23 +13,25 @@ export default function Header() {
           <Bell size={20} />
         </button>
 
-        <div className="text-lg font-bold tracking-tight text-white">iBerryCart</div>
+        <Link href="/" className="text-lg font-bold tracking-tight text-white">
+          iBerryCart
+        </Link>
 
         <div className="flex items-center gap-1">
-          <button
-            type="button"
+          <Link
+            href="/products"
             aria-label="Search"
             className="flex h-9 w-9 items-center justify-center rounded-full text-white/95 transition hover:bg-white/15"
           >
             <Search size={20} />
-          </button>
-          <button
-            type="button"
+          </Link>
+          <Link
+            href="/cart"
             aria-label="Cart"
             className="flex h-9 w-9 items-center justify-center rounded-full text-white/95 transition hover:bg-white/15"
           >
             <ShoppingCart size={20} />
-          </button>
+          </Link>
         </div>
       </div>
     </header>

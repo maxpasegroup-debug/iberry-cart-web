@@ -17,6 +17,7 @@ const OrderSchema = new Schema(
     orderNumber: { type: String, required: true, unique: true, index: true },
     user: { type: Schema.Types.ObjectId, ref: "User", default: null, index: true },
     sessionId: { type: String, required: true, index: true },
+    idempotencyKey: { type: String, default: null, index: true },
     items: { type: [OrderItemSchema], required: true },
     address: {
       fullName: String,
@@ -49,6 +50,14 @@ const OrderSchema = new Schema(
     notes: { type: String, default: "" },
   },
   { timestamps: true },
+);
+
+OrderSchema.index(
+  { sessionId: 1, idempotencyKey: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { idempotencyKey: { $type: "string" } },
+  },
 );
 
 const OrderModel = models.Order || model("Order", OrderSchema);

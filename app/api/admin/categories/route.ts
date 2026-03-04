@@ -1,12 +1,12 @@
-import { NextRequest } from "next/server";
-import { assertAdminRequest } from "@/lib/admin-auth";
+import { requireAdminApiUser } from "@/lib/admin-auth";
 import { connectToDatabase } from "@/lib/db";
 import { errorResponse, successResponse } from "@/lib/api-response";
 import { adminCategorySchema } from "@/lib/validation";
 import CategoryModel from "@/models/Category";
 
-export async function GET(req: NextRequest) {
-  if (!assertAdminRequest(req)) return errorResponse("Unauthorized", 401);
+export async function GET() {
+  const admin = await requireAdminApiUser();
+  if (!admin) return errorResponse("Unauthorized", 401);
 
   try {
     await connectToDatabase();
@@ -17,8 +17,9 @@ export async function GET(req: NextRequest) {
   }
 }
 
-export async function POST(req: NextRequest) {
-  if (!assertAdminRequest(req)) return errorResponse("Unauthorized", 401);
+export async function POST(req: Request) {
+  const admin = await requireAdminApiUser();
+  if (!admin) return errorResponse("Unauthorized", 401);
 
   try {
     await connectToDatabase();

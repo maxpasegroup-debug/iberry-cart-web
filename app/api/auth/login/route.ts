@@ -2,12 +2,14 @@ import { cookies } from "next/headers";
 import { connectToDatabase } from "@/lib/db";
 import { comparePassword, signAuthToken, authCookieName } from "@/lib/auth";
 import { errorResponse, successResponse } from "@/lib/api-response";
+import { ensureDefaultAdminUser } from "@/lib/admin-auth";
 import { loginSchema } from "@/lib/validation";
 import UserModel from "@/models/User";
 
 export async function POST(req: Request) {
   try {
     await connectToDatabase();
+    await ensureDefaultAdminUser();
     const body = await req.json();
     const parsed = loginSchema.safeParse(body);
 

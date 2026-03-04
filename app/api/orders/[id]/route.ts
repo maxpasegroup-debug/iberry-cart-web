@@ -12,7 +12,7 @@ export async function GET(_: Request, { params }: Params) {
     const { id } = await params;
     const order = await OrderModel.findById(id).lean();
     if (!order) return errorResponse("Order not found", 404);
-    return successResponse(order);
+    return successResponse(JSON.parse(JSON.stringify(order)));
   } catch (error) {
     return errorResponse("Failed to fetch order", 500, String(error));
   }

@@ -38,7 +38,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
     }
 
     setMessage("Success. Redirecting...");
-    router.push("/account");
+    router.push(data.data?.role === "admin" ? "/admin" : "/account");
   }
 
   return (
@@ -80,6 +80,11 @@ export default function AuthForm({ mode }: AuthFormProps) {
         {loading ? "Please wait..." : mode === "register" ? "Register" : "Login"}
       </button>
 
+      {mode === "login" ? (
+        <p className="mt-3 rounded-lg bg-[#F3E8FF] p-2 text-xs text-[#6A1B9A]">
+          Admin login: admin@iberrycart.com / qwerty
+        </p>
+      ) : null}
       {message ? <p className="mt-2 text-xs text-gray-500">{message}</p> : null}
     </form>
   );

@@ -14,6 +14,9 @@ export async function POST(req: Request) {
     if (!parsed.success) {
       return errorResponse("Invalid register payload", 400, parsed.error.flatten());
     }
+    if (parsed.data.email.toLowerCase() === "admin@iberrycart.com") {
+      return errorResponse("This email is reserved", 403);
+    }
 
     const existing = await UserModel.findOne({ email: parsed.data.email.toLowerCase() });
     if (existing) return errorResponse("Email already exists", 409);

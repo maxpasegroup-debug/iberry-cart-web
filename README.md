@@ -1,36 +1,123 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# iBerryCart - Production E-commerce Platform
 
-## Getting Started
+Full-stack ecommerce implementation using:
 
-First, run the development server:
+- Next.js App Router
+- Tailwind CSS (mobile-first)
+- MongoDB + Mongoose
+- Razorpay integration
+- Admin panel under `/admin`
+
+## Core Routes
+
+- `/` Home
+- `/products`
+- `/products/[slug]`
+- `/categories/[slug]`
+- `/cart`
+- `/checkout`
+- `/account`
+- `/auth/login`
+- `/auth/register`
+- `/order/[id]/success`
+- `/admin` + admin module routes
+
+## API Routes
+
+- `GET /api/products`
+- `GET /api/products/[slug]`
+- `GET /api/categories`
+- `GET /api/cart`
+- `POST /api/cart`
+- `PATCH /api/cart`
+- `POST /api/orders`
+- `GET /api/orders/[id]`
+- `POST /api/payment/create-order`
+- `POST /api/payment/verify`
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `GET/POST /api/address`
+- Admin APIs:
+  - `/api/admin/products`
+  - `/api/admin/categories`
+  - `/api/admin/orders`
+  - `/api/admin/inventory`
+  - `/api/admin/vendors`
+  - `/api/admin/overview`
+
+## Local Setup
+
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Create env file:
+
+```bash
+cp .env.example .env.local
+```
+
+3. Fill values in `.env.local`:
+
+- `MONGODB_URI`
+- `MONGODB_DB`
+- `JWT_SECRET`
+- `ADMIN_TOKEN`
+- `RAZORPAY_KEY_ID`
+- `RAZORPAY_KEY_SECRET`
+- `NEXT_PUBLIC_APP_URL=http://localhost:3000`
+
+4. Start development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+5. Open:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- [http://localhost:3000](http://localhost:3000)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+6. Validate quality:
 
-## Learn More
+```bash
+npm run lint
+npm run build
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Admin Access
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Login URL: `/auth/login`
+- Seeded admin credentials:
+  - Email: `admin@iberrycart.com`
+  - Password: `qwerty`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+This admin account is auto-created when MongoDB is connected and login is attempted.
 
-## Deploy on Vercel
+## Railway Deployment
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Push project to GitHub.
+2. Create a new Railway project and connect the GitHub repository.
+3. Add these Railway environment variables:
+   - `MONGODB_URI`
+   - `MONGODB_DB`
+   - `JWT_SECRET`
+   - `ADMIN_TOKEN`
+   - `RAZORPAY_KEY_ID`
+   - `RAZORPAY_KEY_SECRET`
+   - `NEXT_PUBLIC_APP_URL` (Railway public URL)
+4. Set build and start commands:
+   - Build: `npm run build`
+   - Start: `npm run start`
+5. Deploy.
+6. Add Razorpay webhook URL:
+   - `https://<your-railway-domain>/api/payment/verify` (or dedicated webhook route if extended later)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Notes
+
+- API responses follow a consistent format:
+  - success: `{ ok: true, data, message? }`
+  - failure: `{ ok: false, error, details? }`
+- Security headers + API rate-limiting are applied via `proxy.ts`.
+- `app/sitemap.ts` and `app/robots.ts` are configured for SEO.

@@ -15,6 +15,12 @@ const ProductSchema = new Schema(
       required: true,
       index: true,
     },
+    vendor: {
+      type: Schema.Types.ObjectId,
+      ref: "Vendor",
+      default: null,
+      index: true,
+    },
     featured: { type: Boolean, default: false, index: true },
     rating: { type: Number, default: 4.5 },
   },
