@@ -2,6 +2,18 @@ import type { Metadata } from "next";
 import { Inter, Poppins } from "next/font/google";
 import "./globals.css";
 
+function getMetadataBaseUrl() {
+  const raw = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  if (!raw) return new URL("http://localhost:3000");
+
+  const withProtocol = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+  try {
+    return new URL(withProtocol);
+  } catch {
+    return new URL("http://localhost:3000");
+  }
+}
+
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
@@ -20,9 +32,7 @@ export const metadata: Metadata = {
   },
   description:
     "Shop premium tea, coffee, honey, spices and wellness essentials from iBerryCart.",
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
-  ),
+  metadataBase: getMetadataBaseUrl(),
 };
 
 const noopMono = Inter({

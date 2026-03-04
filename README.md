@@ -34,8 +34,11 @@ Full-stack ecommerce implementation using:
 - `GET /api/orders/[id]`
 - `POST /api/payment/create-order`
 - `POST /api/payment/verify`
+- `POST /api/payment/webhook`
 - `POST /api/auth/register`
 - `POST /api/auth/login`
+- `POST /api/auth/logout`
+- `POST /api/auth/change-password`
 - `GET/POST /api/address`
 - Admin APIs:
   - `/api/admin/products`
@@ -65,8 +68,11 @@ cp .env.example .env.local
 - `MONGODB_DB`
 - `JWT_SECRET`
 - `ADMIN_TOKEN`
+- `ADMIN_BOOTSTRAP_EMAIL`
+- `ADMIN_BOOTSTRAP_PASSWORD`
 - `RAZORPAY_KEY_ID`
 - `RAZORPAY_KEY_SECRET`
+- `RAZORPAY_WEBHOOK_SECRET`
 - `NEXT_PUBLIC_APP_URL=http://localhost:3000`
 
 4. Start development server:
@@ -95,6 +101,13 @@ npm run build
 
 This admin account is auto-created when MongoDB is connected and login is attempted.
 
+For production, set:
+
+- `ADMIN_BOOTSTRAP_EMAIL`
+- `ADMIN_BOOTSTRAP_PASSWORD`
+
+and rotate it after first login.
+
 ## Railway Deployment
 
 1. Push project to GitHub.
@@ -104,15 +117,18 @@ This admin account is auto-created when MongoDB is connected and login is attemp
    - `MONGODB_DB`
    - `JWT_SECRET`
    - `ADMIN_TOKEN`
+   - `ADMIN_BOOTSTRAP_EMAIL`
+   - `ADMIN_BOOTSTRAP_PASSWORD`
    - `RAZORPAY_KEY_ID`
    - `RAZORPAY_KEY_SECRET`
+   - `RAZORPAY_WEBHOOK_SECRET`
    - `NEXT_PUBLIC_APP_URL` (Railway public URL)
 4. Set build and start commands:
    - Build: `npm run build`
    - Start: `npm run start`
 5. Deploy.
 6. Add Razorpay webhook URL:
-   - `https://<your-railway-domain>/api/payment/verify` (or dedicated webhook route if extended later)
+   - `https://<your-railway-domain>/api/payment/webhook`
 
 ## Notes
 

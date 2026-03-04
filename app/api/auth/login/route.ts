@@ -1,10 +1,10 @@
-import { cookies } from "next/headers";
 import { connectToDatabase } from "@/lib/db";
-import { comparePassword, signAuthToken, authCookieName } from "@/lib/auth";
+import { comparePassword, signAuthToken, setAuthCookie } from "@/lib/auth";
 import { errorResponse, successResponse } from "@/lib/api-response";
 import { ensureDefaultAdminUser } from "@/lib/admin-auth";
 import { loginSchema } from "@/lib/validation";
 import UserModel from "@/models/User";
+import { captureServerError } from "@/lib/monitoring";
 
 export async function POST(req: Request) {
   try {
@@ -24,14 +24,7 @@ export async function POST(req: Request) {
     if (!isValid) return errorResponse("Invalid credentials", 401);
 
     const token = signAuthToken({ userId: String(user._id), role: user.role });
-    const cookieStore = await cookies();
-    cookieStore.set(authCookieName, token, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 7,
-    });
+    await setAuthCookie(token);
 
     return successResponse({
       id: user._id,
@@ -40,6 +33,7 @@ export async function POST(req: Request) {
       role: user.role,
     });
   } catch (error) {
+    captureServerError(error, { route: "/api/auth/login", action: "POST" });
     return errorResponse("Failed to login", 500, String(error));
   }
 }

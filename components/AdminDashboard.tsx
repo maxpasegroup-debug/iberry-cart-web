@@ -66,6 +66,10 @@ export default function AdminDashboard() {
   const [vendorEmail, setVendorEmail] = useState("");
   const [vendorRegion, setVendorRegion] = useState("India");
   const [vendorDropshipping, setVendorDropshipping] = useState(true);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [categoryName, setCategoryName] = useState("");
+  const [categorySlug, setCategorySlug] = useState("");
 
   const [productName, setProductName] = useState("");
   const [imageUrl, setImageUrl] = useState("");
@@ -177,6 +181,19 @@ export default function AdminDashboard() {
     }
   }
 
+  async function updateVendorStatus(vendorId: string, status: Vendor["status"]) {
+    const res = await fetch("/api/admin/vendors", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ vendorId, status }),
+    });
+    const payload = await res.json();
+    setMessage(payload.ok ? "Vendor status updated." : payload.error);
+    if (payload.ok) {
+      await loadData();
+    }
+  }
+
   async function createProduct() {
     const res = await fetch("/api/admin/products", {
       method: "POST",
@@ -196,6 +213,79 @@ export default function AdminDashboard() {
     });
     const payload = await res.json();
     setMessage(payload.ok ? "Product uploaded." : payload.error);
+    if (payload.ok) {
+      await loadData();
+    }
+  }
+
+  async function changePassword() {
+    setMessage("");
+    const res = await fetch("/api/auth/change-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+    const payload = await res.json();
+    setMessage(payload.ok ? "Password changed." : payload.error);
+    if (payload.ok) {
+      setCurrentPassword("");
+      setNewPassword("");
+    }
+  }
+
+  async function logout() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    window.location.href = "/auth/login";
+  }
+
+  async function createCategory() {
+    setMessage("");
+    const res = await fetch("/api/admin/categories", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: categoryName, slug: categorySlug }),
+    });
+    const payload = await res.json();
+    setMessage(payload.ok ? "Category created." : payload.error);
+    if (payload.ok) {
+      setCategoryName("");
+      setCategorySlug("");
+      await loadData();
+    }
+  }
+
+  async function updateOrderStatus(orderId: string, status: string) {
+    const res = await fetch("/api/admin/orders", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId, status }),
+    });
+    const payload = await res.json();
+    setMessage(payload.ok ? "Order status updated." : payload.error);
+    if (payload.ok) {
+      await loadData();
+    }
+  }
+
+  async function deleteProduct(productId: string) {
+    const res = await fetch(`/api/admin/products?id=${productId}`, {
+      method: "DELETE",
+    });
+    const payload = await res.json();
+    setMessage(payload.ok ? "Product deleted." : payload.error);
+    if (payload.ok) {
+      await loadData();
+    }
+  }
+
+  async function updateStock(productId: string, stock: number) {
+    const res = await fetch("/api/admin/inventory", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ productId, stock }),
+    });
+    const payload = await res.json();
+    setMessage(payload.ok ? "Stock updated." : payload.error);
     if (payload.ok) {
       await loadData();
     }
@@ -232,6 +322,42 @@ export default function AdminDashboard() {
               {tab.label}
             </button>
           ))}
+        </div>
+      </section>
+
+      <section className="rounded-xl bg-white p-4 shadow-sm">
+        <h2 className="text-sm font-semibold text-[#6A1B9A]">Admin Security</h2>
+        <div className="mt-2 space-y-2">
+          <input
+            className="w-full rounded-lg border border-gray-200 p-2 text-sm"
+            type="password"
+            placeholder="Current Password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+          />
+          <input
+            className="w-full rounded-lg border border-gray-200 p-2 text-sm"
+            type="password"
+            placeholder="New Password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+          />
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={changePassword}
+              className="rounded-full bg-[#6A1B9A] px-4 py-2 text-xs text-white"
+            >
+              Update Password
+            </button>
+            <button
+              type="button"
+              onClick={logout}
+              className="rounded-full bg-red-50 px-4 py-2 text-xs text-red-600"
+            >
+              Logout
+            </button>
+          </div>
         </div>
       </section>
 
@@ -308,6 +434,22 @@ export default function AdminDashboard() {
                   <p className="font-medium text-gray-800">{product.name}</p>
                   <p>Rs. {product.price} | Stock: {product.stock} | Category: {product.category?.name ?? "-"}</p>
                   <p>Vendor: {product.vendor?.name ?? "In-house"} | {product.featured ? "Featured" : "Standard"}</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => updateStock(product._id, Math.max(0, product.stock + 5))}
+                      className="rounded-full bg-[#F3E8FF] px-2 py-1 text-[10px] text-[#6A1B9A]"
+                    >
+                      +5 Stock
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => deleteProduct(product._id)}
+                      className="rounded-full bg-red-50 px-2 py-1 text-[10px] text-red-600"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </article>
               ))}
             </div>
@@ -324,6 +466,18 @@ export default function AdminDashboard() {
                 <p className="font-medium text-gray-800">{order.orderNumber}</p>
                 <p>Status: {order.status} | Payment: {order.paymentStatus}</p>
                 <p>Total: Rs. {order.total} | {new Date(order.createdAt).toLocaleString()}</p>
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {["pending", "paid", "packed", "shipped", "delivered", "cancelled"].map((status) => (
+                    <button
+                      key={status}
+                      type="button"
+                      onClick={() => updateOrderStatus(order._id, status)}
+                      className="rounded-full bg-[#F3E8FF] px-2 py-1 text-[10px] text-[#6A1B9A]"
+                    >
+                      {status}
+                    </button>
+                  ))}
+                </div>
               </article>
             ))}
           </div>
@@ -355,6 +509,18 @@ export default function AdminDashboard() {
                   <p className="font-medium text-gray-800">{vendor.name}</p>
                   <p>{vendor.email} | {vendor.region}</p>
                   <p>Status: {vendor.status} | {vendor.dropshipping ? "Dropshipping" : "Fulfilled by iBerryCart"}</p>
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {(["pending", "active", "suspended"] as const).map((status) => (
+                      <button
+                        key={status}
+                        type="button"
+                        onClick={() => updateVendorStatus(vendor._id, status)}
+                        className="rounded-full bg-[#F3E8FF] px-2 py-1 text-[10px] text-[#6A1B9A]"
+                      >
+                        {status}
+                      </button>
+                    ))}
+                  </div>
                 </article>
               ))}
             </div>
@@ -363,17 +529,43 @@ export default function AdminDashboard() {
       ) : null}
 
       {activePanel === "categories" ? (
-        <section className="rounded-xl bg-white p-4 shadow-sm">
-          <h2 className="text-sm font-semibold text-[#6A1B9A]">Categories</h2>
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            {categories.map((category) => (
-              <div key={category._id} className="rounded-lg border border-gray-100 p-2 text-xs text-gray-700">
-                <p className="font-medium">{category.name}</p>
-                <p className="text-gray-500">{category.slug}</p>
-              </div>
-            ))}
-          </div>
-        </section>
+        <>
+          <section className="rounded-xl bg-white p-4 shadow-sm">
+            <h2 className="text-sm font-semibold text-[#6A1B9A]">Create Category</h2>
+            <div className="mt-2 space-y-2">
+              <input
+                className="w-full rounded-lg border border-gray-200 p-2 text-sm"
+                placeholder="Category Name"
+                value={categoryName}
+                onChange={(e) => setCategoryName(e.target.value)}
+              />
+              <input
+                className="w-full rounded-lg border border-gray-200 p-2 text-sm"
+                placeholder="category-slug"
+                value={categorySlug}
+                onChange={(e) => setCategorySlug(e.target.value)}
+              />
+              <button
+                type="button"
+                onClick={createCategory}
+                className="rounded-full bg-[#6A1B9A] px-4 py-2 text-sm text-white"
+              >
+                Save Category
+              </button>
+            </div>
+          </section>
+          <section className="rounded-xl bg-white p-4 shadow-sm">
+            <h2 className="text-sm font-semibold text-[#6A1B9A]">Categories</h2>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              {categories.map((category) => (
+                <div key={category._id} className="rounded-lg border border-gray-100 p-2 text-xs text-gray-700">
+                  <p className="font-medium">{category.name}</p>
+                  <p className="text-gray-500">{category.slug}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        </>
       ) : null}
 
       {message ? (

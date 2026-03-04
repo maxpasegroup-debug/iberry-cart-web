@@ -4,6 +4,7 @@ import { errorResponse, successResponse } from "@/lib/api-response";
 import { paymentCreateSchema } from "@/lib/validation";
 import OrderModel from "@/models/Order";
 import PaymentModel from "@/models/Payment";
+import { captureServerError } from "@/lib/monitoring";
 
 function razorpayClient() {
   const keyId = process.env.RAZORPAY_KEY_ID;
@@ -88,6 +89,10 @@ export async function POST(req: Request) {
       currency: "INR",
     });
   } catch (error) {
+    captureServerError(error, {
+      route: "/api/payment/create-order",
+      action: "POST",
+    });
     return errorResponse("Failed to create payment order", 500, String(error));
   }
 }

@@ -4,14 +4,15 @@ import { connectToDatabase } from "@/lib/db";
 import { hasMongoConfig } from "@/lib/env";
 
 export async function ensureDefaultAdminUser() {
-  const adminEmail = "admin@iberrycart.com";
+  const adminEmail = process.env.ADMIN_BOOTSTRAP_EMAIL ?? "admin@iberrycart.com";
+  const adminPassword = process.env.ADMIN_BOOTSTRAP_PASSWORD ?? "qwerty";
   const existingAdmin = await UserModel.findOne({ email: adminEmail });
   if (existingAdmin) return existingAdmin;
 
   return UserModel.create({
     name: "iBerryCart Admin",
     email: adminEmail,
-    passwordHash: await hashPassword("qwerty"),
+    passwordHash: await hashPassword(adminPassword),
     role: "admin",
   });
 }

@@ -5,6 +5,7 @@ import { errorResponse, successResponse } from "@/lib/api-response";
 import { paymentVerifySchema } from "@/lib/validation";
 import PaymentModel from "@/models/Payment";
 import OrderModel from "@/models/Order";
+import { captureServerError } from "@/lib/monitoring";
 
 export async function POST(req: Request) {
   let dbSession: mongoose.ClientSession | null = null;
@@ -64,6 +65,7 @@ export async function POST(req: Request) {
     if (dbSession) {
       await dbSession.abortTransaction();
     }
+    captureServerError(error, { route: "/api/payment/verify", action: "POST" });
     return errorResponse("Failed to verify payment", 500, String(error));
   } finally {
     if (dbSession) {

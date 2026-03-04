@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { requireAdminApiUser } from "@/lib/admin-auth";
 import { connectToDatabase } from "@/lib/db";
 import { errorResponse, successResponse } from "@/lib/api-response";
+import { orderStatusSchema } from "@/lib/validation";
 import OrderModel from "@/models/Order";
 
 export async function GET() {
@@ -24,10 +25,11 @@ export async function PATCH(req: NextRequest) {
   try {
     await connectToDatabase();
     const body = await req.json();
-    const orderId = body.orderId as string;
-    const status = body.status as string;
-
-    if (!orderId || !status) return errorResponse("Missing orderId or status", 400);
+    const parsed = orderStatusSchema.safeParse(body);
+    if (!parsed.success) {
+      return errorResponse("Invalid order status payload", 400, parsed.error.flatten());
+    }
+    const { orderId, status } = parsed.data;
 
     const order = await OrderModel.findByIdAndUpdate(orderId, { status }, { new: true });
     if (!order) return errorResponse("Order not found", 404);

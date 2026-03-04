@@ -11,6 +11,11 @@ export const loginSchema = z.object({
   password: z.string().min(8),
 });
 
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1),
+  newPassword: z.string().min(8),
+});
+
 export const productQuerySchema = z.object({
   category: z.string().optional(),
   featured: z.enum(["true", "false"]).optional(),
@@ -52,6 +57,18 @@ export const paymentVerifySchema = z.object({
   razorpay_order_id: z.string().min(1),
   razorpay_payment_id: z.string().min(1),
   razorpay_signature: z.string().min(1),
+});
+
+export const orderStatusSchema = z.object({
+  orderId: z.string().min(1),
+  status: z.enum([
+    "pending",
+    "paid",
+    "packed",
+    "shipped",
+    "delivered",
+    "cancelled",
+  ]),
 });
 
 export const adminProductSchema = z.object({

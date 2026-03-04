@@ -9,6 +9,7 @@ import CartModel from "@/models/Cart";
 import OrderModel from "@/models/Order";
 import CouponModel from "@/models/Coupon";
 import ProductModel from "@/models/Product";
+import { captureServerError } from "@/lib/monitoring";
 
 type OrderLine = {
   product: {
@@ -155,6 +156,7 @@ export async function POST(req: Request) {
     if (dbSession) {
       await dbSession.abortTransaction();
     }
+    captureServerError(error, { route: "/api/orders", action: "POST" });
     return errorResponse("Failed to create order", 500, String(error));
   } finally {
     if (dbSession) {

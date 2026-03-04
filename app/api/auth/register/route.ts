@@ -1,9 +1,9 @@
-import { cookies } from "next/headers";
 import { connectToDatabase } from "@/lib/db";
 import { errorResponse, successResponse } from "@/lib/api-response";
-import { hashPassword, signAuthToken, authCookieName } from "@/lib/auth";
+import { hashPassword, signAuthToken, setAuthCookie } from "@/lib/auth";
 import { registerSchema } from "@/lib/validation";
 import UserModel from "@/models/User";
+import { captureServerError } from "@/lib/monitoring";
 
 export async function POST(req: Request) {
   try {
@@ -29,14 +29,7 @@ export async function POST(req: Request) {
     });
 
     const token = signAuthToken({ userId: String(user._id), role: user.role });
-    const cookieStore = await cookies();
-    cookieStore.set(authCookieName, token, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 7,
-    });
+    await setAuthCookie(token);
 
     return successResponse(
       { id: user._id, name: user.name, email: user.email, role: user.role },
@@ -44,6 +37,7 @@ export async function POST(req: Request) {
       201,
     );
   } catch (error) {
+    captureServerError(error, { route: "/api/auth/register", action: "POST" });
     return errorResponse("Failed to register", 500, String(error));
   }
 }
