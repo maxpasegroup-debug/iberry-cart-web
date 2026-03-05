@@ -5,7 +5,10 @@ import { hasMongoConfig } from "@/lib/env";
 
 export async function ensureDefaultAdminUser() {
   const adminEmail = process.env.ADMIN_BOOTSTRAP_EMAIL ?? "admin@iberrycart.com";
-  const adminPassword = process.env.ADMIN_BOOTSTRAP_PASSWORD ?? "qwerty";
+  const adminPassword = process.env.ADMIN_BOOTSTRAP_PASSWORD ?? "ChangeMe@123";
+  if (adminPassword.length < 8) {
+    throw new Error("ADMIN_BOOTSTRAP_PASSWORD must be at least 8 characters.");
+  }
   const existingAdmin = await UserModel.findOne({ email: adminEmail });
   if (existingAdmin) return existingAdmin;
 

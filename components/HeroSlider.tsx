@@ -39,7 +39,7 @@ export default function HeroSlider() {
   const currentBanner = banners[currentIndex];
 
   return (
-    <section className="mx-4 mt-4 h-[200px] rounded-xl bg-gradient-to-r from-[#6A1B9A] to-[#8E24AA] p-4 font-[Poppins] text-white shadow-sm">
+    <section className="mx-4 mt-4 h-[200px] rounded-xl bg-gradient-to-r from-[#6A1B9A] to-[#8E24AA] p-4 font-[Poppins] text-white shadow-sm lg:mx-auto lg:mt-6 lg:h-[260px] lg:max-w-screen-xl lg:p-6">
       <div className="relative flex h-full items-center justify-between">
         <div className="max-w-[62%]">
           <h2 className="text-lg font-semibold leading-tight">{currentBanner.title}</h2>

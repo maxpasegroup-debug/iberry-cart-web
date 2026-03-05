@@ -95,11 +95,11 @@ npm run build
 ## Admin Access
 
 - Login URL: `/auth/login`
-- Seeded admin credentials:
-  - Email: `admin@iberrycart.com`
-  - Password: `qwerty`
+- Bootstrap admin credentials are read from:
+  - `ADMIN_BOOTSTRAP_EMAIL`
+  - `ADMIN_BOOTSTRAP_PASSWORD` (minimum 8 chars)
 
-This admin account is auto-created when MongoDB is connected and login is attempted.
+This admin account is auto-created when MongoDB is connected and login is attempted. Do not use weak default passwords in production.
 
 For production, set:
 

@@ -3,8 +3,8 @@ import Link from "next/link";
 
 export default function Header() {
   return (
-    <header className="sticky top-0 z-50 h-[60px] w-full bg-gradient-to-r from-[#6A1B9A] to-[#8E24AA] shadow-[0_2px_8px_rgba(0,0,0,0.16)]">
-      <div className="mx-auto flex h-full w-full max-w-screen-md items-center justify-between px-4">
+    <header className="sticky top-0 z-50 h-[60px] w-full bg-gradient-to-r from-[#6A1B9A] to-[#8E24AA] shadow-[0_2px_8px_rgba(0,0,0,0.16)] lg:h-[68px]">
+      <div className="mx-auto flex h-full w-full max-w-screen-xl items-center justify-between px-4 lg:px-6">
         <button
           type="button"
           aria-label="Notifications"

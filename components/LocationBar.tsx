@@ -5,7 +5,7 @@ export default function LocationBar() {
     <button
       type="button"
       aria-label="Select delivery location"
-      className="mx-4 mt-3 flex w-[calc(100%-2rem)] cursor-pointer items-center justify-between rounded-xl bg-[#FFFFFF] px-4 py-3 text-left shadow-sm transition hover:shadow"
+      className="mx-4 mt-3 flex w-[calc(100%-2rem)] cursor-pointer items-center justify-between rounded-xl bg-[#FFFFFF] px-4 py-3 text-left shadow-sm transition hover:shadow lg:mx-auto lg:w-full lg:max-w-screen-xl"
     >
       <div className="flex items-center gap-3">
         <MapPin size={18} className="shrink-0 text-gray-500" />

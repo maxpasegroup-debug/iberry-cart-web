@@ -1,5 +1,6 @@
 "use client";
 
+import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -12,6 +13,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -63,13 +65,23 @@ export default function AuthForm({ mode }: AuthFormProps) {
           onChange={(e) => setEmail(e.target.value)}
           type="email"
         />
-        <input
-          className="w-full rounded-lg border border-gray-200 p-2 text-sm"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          type="password"
-        />
+        <div className="relative">
+          <input
+            className="w-full rounded-lg border border-gray-200 p-2 pr-10 text-sm"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            type={showPassword ? "text" : "password"}
+          />
+          <button
+            type="button"
+            aria-label={showPassword ? "Hide password" : "Show password"}
+            onClick={() => setShowPassword((prev) => !prev)}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500"
+          >
+            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
+        </div>
       </div>
 
       <button
@@ -82,7 +94,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
 
       {mode === "login" ? (
         <p className="mt-3 rounded-lg bg-[#F3E8FF] p-2 text-xs text-[#6A1B9A]">
-          Admin login: admin@iberrycart.com / qwerty
+          Admin credentials are configured via environment variables.
         </p>
       ) : null}
       {message ? <p className="mt-2 text-xs text-gray-500">{message}</p> : null}

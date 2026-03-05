@@ -1,5 +1,9 @@
 import { connectToDatabase } from "@/lib/db";
-import { comparePassword, signAuthToken, setAuthCookie } from "@/lib/auth";
+import {
+  comparePassword,
+  signAuthToken,
+  setAuthCookie,
+} from "@/lib/auth";
 import { errorResponse, successResponse } from "@/lib/api-response";
 import { ensureDefaultAdminUser } from "@/lib/admin-auth";
 import { loginSchema } from "@/lib/validation";

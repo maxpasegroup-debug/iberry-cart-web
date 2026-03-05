@@ -9,12 +9,12 @@ const features = [
 
 export default function WhyChoose() {
   return (
-    <section>
-      <h3 className="mx-4 mt-6 text-lg font-semibold font-[Poppins] text-[#6A1B9A]">
+    <section className="lg:mx-auto lg:max-w-screen-xl">
+      <h3 className="mx-4 mt-6 text-lg font-semibold font-[Poppins] text-[#6A1B9A] lg:mx-0 lg:mt-7">
         Why Choose iBerryCart
       </h3>
 
-      <div className="mt-3 grid grid-cols-2 gap-4 px-4">
+      <div className="mt-3 grid grid-cols-2 gap-4 px-4 lg:mx-0 lg:grid-cols-4 lg:px-0">
         {features.map((feature) => {
           const Icon = feature.icon;
 

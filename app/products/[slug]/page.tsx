@@ -38,7 +38,7 @@ export default async function ProductDetailsPage({ params }: Params) {
 
   return (
     <div className="min-h-screen bg-[#F3E8FF] pb-[81px] lg:pb-6">
-      <section className="mx-4 mt-4 overflow-hidden rounded-xl bg-white shadow-sm">
+      <section className="mx-4 mt-4 overflow-hidden rounded-xl bg-white shadow-sm lg:mx-auto lg:mt-8 lg:max-w-screen-lg">
         <div className="relative h-64 w-full bg-[#F3E8FF]">
           <Image src={product.image} alt={product.name} fill className="object-cover" sizes="100vw" />
         </div>
