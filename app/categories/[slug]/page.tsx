@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import ProductCard from "@/components/ProductCard";
 import EmptyState from "@/components/EmptyState";
-import { apiFetch } from "@/lib/server-fetch";
+import { apiFetchSafe } from "@/lib/server-fetch";
 import type { Product } from "@/lib/types";
 
 type Params = {
@@ -15,7 +15,10 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
 export default async function CategoryPage({ params }: Params) {
   const { slug } = await params;
-  const products = await apiFetch<Product[]>(`/api/products?category=${slug}`);
+  const products = await apiFetchSafe<Product[]>(
+    `/api/products?category=${slug}`,
+    [],
+  );
 
   return (
     <div className="min-h-screen bg-[#F3E8FF] pb-[81px] lg:pb-6">

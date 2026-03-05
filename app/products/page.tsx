@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import ProductCard from "@/components/ProductCard";
 import EmptyState from "@/components/EmptyState";
-import { apiFetch } from "@/lib/server-fetch";
+import { apiFetchSafe } from "@/lib/server-fetch";
 import type { Product } from "@/lib/types";
 
 export const metadata: Metadata = {
@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default async function ProductsPage() {
-  const products = await apiFetch<Product[]>("/api/products");
+  const products = await apiFetchSafe<Product[]>("/api/products", []);
 
   return (
     <div className="min-h-screen bg-[#F3E8FF] pb-[81px] lg:pb-6">

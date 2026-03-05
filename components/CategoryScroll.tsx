@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { Circle } from "lucide-react";
-import { apiFetch } from "@/lib/server-fetch";
+import { apiFetchSafe } from "@/lib/server-fetch";
 import type { Category } from "@/lib/types";
 
 export default async function CategoryScroll() {
-  const categories = await apiFetch<Category[]>("/api/categories");
+  const categories = await apiFetchSafe<Category[]>("/api/categories", []);
   return (
     <section>
       <h3 className="mx-4 mt-5 text-lg font-semibold font-[Poppins] text-[#6A1B9A]">

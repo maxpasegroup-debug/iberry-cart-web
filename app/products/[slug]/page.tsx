@@ -4,7 +4,8 @@ import AddToCartButton from "@/components/AddToCartButton";
 import PriceBlock from "@/components/PriceBlock";
 import RatingStars from "@/components/RatingStars";
 import Badge from "@/components/Badge";
-import { apiFetch } from "@/lib/server-fetch";
+import EmptyState from "@/components/EmptyState";
+import { apiFetchSafe } from "@/lib/server-fetch";
 import type { Product } from "@/lib/types";
 
 type Params = {
@@ -20,7 +21,20 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
 export default async function ProductDetailsPage({ params }: Params) {
   const { slug } = await params;
-  const product = await apiFetch<Product>(`/api/products/${slug}`);
+  const product = await apiFetchSafe<Product | null>(`/api/products/${slug}`, null);
+
+  if (!product) {
+    return (
+      <div className="min-h-screen bg-[#F3E8FF] pb-[81px] lg:pb-6">
+        <div className="pt-6">
+          <EmptyState
+            title="Product unavailable"
+            description="This product could not be loaded right now."
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F3E8FF] pb-[81px] lg:pb-6">
