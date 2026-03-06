@@ -5,6 +5,7 @@ import ComboPacks from "@/components/ComboPacks";
 import Header from "@/components/Header";
 import HeroSlider from "@/components/HeroSlider";
 import LocationBar from "@/components/LocationBar";
+import NewArrivals from "@/components/NewArrivals";
 import SearchBar from "@/components/SearchBar";
 import WhyChoose from "@/components/WhyChoose";
 
@@ -15,6 +16,7 @@ export default function Home() {
       <SearchBar />
       <LocationBar />
       <HeroSlider />
+      <NewArrivals />
       <CategoryScroll />
       <ComboPacks />
       <WhyChoose />

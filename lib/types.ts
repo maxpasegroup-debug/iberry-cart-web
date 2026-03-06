@@ -17,6 +17,11 @@ export type Product = {
   featured?: boolean;
   rating?: number;
   category?: Category;
+  brand?: {
+    _id: string;
+    name: string;
+    type: "own" | "partner" | "dropshipping";
+  };
 };
 
 export type CartResponse = {

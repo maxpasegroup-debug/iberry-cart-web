@@ -14,6 +14,7 @@ export async function GET() {
     const products = await ProductModel.find({})
       .populate("category", "name slug")
       .populate("vendor", "name email status")
+      .populate("brand", "name type onboardingStatus")
       .sort({ createdAt: -1 })
       .lean();
     return successResponse(products);
@@ -44,6 +45,7 @@ export async function POST(req: NextRequest) {
       stock: parsed.data.stock,
       category: parsed.data.categoryId,
       vendor: parsed.data.vendorId ?? null,
+      brand: parsed.data.brandId ?? null,
       featured: parsed.data.featured,
       image: parsed.data.image,
     });
@@ -76,6 +78,10 @@ export async function PATCH(req: NextRequest) {
     if (parsed.data.vendorId !== undefined) {
       updateData.vendor = parsed.data.vendorId ?? null;
       delete updateData.vendorId;
+    }
+    if (parsed.data.brandId !== undefined) {
+      updateData.brand = parsed.data.brandId ?? null;
+      delete updateData.brandId;
     }
     const updated = await ProductModel.findByIdAndUpdate(productId, updateData, { new: true });
     if (!updated) return errorResponse("Product not found", 404);

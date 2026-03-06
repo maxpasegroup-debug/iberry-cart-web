@@ -70,6 +70,7 @@ cp .env.example .env.local
 - `ADMIN_TOKEN`
 - `ADMIN_BOOTSTRAP_EMAIL`
 - `ADMIN_BOOTSTRAP_PASSWORD`
+- `SINGLE_MANAGER_MODE=true`
 - `RAZORPAY_KEY_ID`
 - `RAZORPAY_KEY_SECRET`
 - `RAZORPAY_WEBHOOK_SECRET`
@@ -100,6 +101,8 @@ npm run build
   - `ADMIN_BOOTSTRAP_PASSWORD` (minimum 8 chars)
 
 This admin account is auto-created when MongoDB is connected and login is attempted. Do not use weak default passwords in production.
+
+When `SINGLE_MANAGER_MODE=true`, only the configured bootstrap admin email can access admin routes/APIs.
 
 For production, set:
 

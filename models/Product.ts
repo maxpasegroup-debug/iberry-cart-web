@@ -21,6 +21,12 @@ const ProductSchema = new Schema(
       default: null,
       index: true,
     },
+    brand: {
+      type: Schema.Types.ObjectId,
+      ref: "Brand",
+      default: null,
+      index: true,
+    },
     featured: { type: Boolean, default: false, index: true },
     rating: { type: Number, default: 4.5 },
   },

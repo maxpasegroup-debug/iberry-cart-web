@@ -15,6 +15,7 @@ export async function GET(_: Request, { params }: Params) {
     const product = await ProductModel.findOne({ slug })
       .populate("category", "name slug")
       .populate("vendor", "name status")
+      .populate("brand", "name type")
       .lean();
 
     if (!product) {

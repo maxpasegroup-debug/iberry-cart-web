@@ -24,6 +24,12 @@ export async function POST(req: Request) {
     const user = await UserModel.findOne({ email: parsed.data.email.toLowerCase() });
     if (!user) return errorResponse("Invalid credentials", 401);
 
+    const managerEmail = (process.env.ADMIN_BOOTSTRAP_EMAIL ?? "admin@iberrycart.com").toLowerCase();
+    const singleManagerMode = (process.env.SINGLE_MANAGER_MODE ?? "true").toLowerCase() !== "false";
+    if (singleManagerMode && user.role === "admin" && user.email.toLowerCase() !== managerEmail) {
+      return errorResponse("Unauthorized admin account", 403);
+    }
+
     const isValid = await comparePassword(parsed.data.password, user.passwordHash);
     if (!isValid) return errorResponse("Invalid credentials", 401);
 

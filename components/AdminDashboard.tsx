@@ -8,9 +8,11 @@ type AdminOverview = {
     orderCount: number;
     vendorCount: number;
     categoryCount: number;
+    brandCount: number;
     grossRevenue: number;
   };
   orderStatus: Array<{ _id: string; count: number }>;
+  brandMix: Array<{ _id: "own" | "partner" | "dropshipping"; count: number }>;
   lowStock: Array<{ _id: string; name: string; stock: number }>;
 };
 
@@ -23,6 +25,7 @@ type AdminProduct = {
   discountPrice?: number | null;
   featured: boolean;
   category?: { _id: string; name: string };
+  brand?: { _id: string; name: string; type: "own" | "partner" | "dropshipping" } | null;
   vendor?: { _id: string; name: string } | null;
 };
 
@@ -50,9 +53,19 @@ type Vendor = {
   region: string;
 };
 
+type Brand = {
+  _id: string;
+  name: string;
+  slug: string;
+  type: "own" | "partner" | "dropshipping";
+  onboardingStatus: "pending" | "approved" | "rejected";
+  contactEmail?: string;
+  commissionRate?: number;
+};
+
 export default function AdminDashboard() {
   const [activePanel, setActivePanel] = useState<
-    "overview" | "products" | "orders" | "vendors" | "categories"
+    "overview" | "brands" | "products" | "orders" | "vendors" | "categories"
   >("overview");
 
   const [message, setMessage] = useState("");
@@ -61,11 +74,22 @@ export default function AdminDashboard() {
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [categories, setCategories] = useState<AdminCategory[]>([]);
   const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
 
   const [vendorName, setVendorName] = useState("");
   const [vendorEmail, setVendorEmail] = useState("");
   const [vendorRegion, setVendorRegion] = useState("India");
   const [vendorDropshipping, setVendorDropshipping] = useState(true);
+  const [ownBrandName, setOwnBrandName] = useState("");
+  const [ownBrandSlug, setOwnBrandSlug] = useState("");
+  const [ownBrandEmail, setOwnBrandEmail] = useState("");
+  const [partnerBrandName, setPartnerBrandName] = useState("");
+  const [partnerBrandSlug, setPartnerBrandSlug] = useState("");
+  const [partnerBrandEmail, setPartnerBrandEmail] = useState("");
+  const [dropshipBrandName, setDropshipBrandName] = useState("");
+  const [dropshipBrandSlug, setDropshipBrandSlug] = useState("");
+  const [dropshipBrandEmail, setDropshipBrandEmail] = useState("");
+  const [dropshipCommission, setDropshipCommission] = useState(12);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [categoryName, setCategoryName] = useState("");
@@ -80,30 +104,44 @@ export default function AdminDashboard() {
   const [description, setDescription] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [vendorId, setVendorId] = useState("");
+  const [brandId, setBrandId] = useState("");
   const [featured, setFeatured] = useState(false);
 
   const lowStockCount = useMemo(
     () => overview?.lowStock.filter((item) => item.stock <= 10).length ?? 0,
     [overview],
   );
+  const brandTypeCount = useMemo(
+    () =>
+      (overview?.brandMix ?? []).reduce(
+        (acc, curr) => ({ ...acc, [curr._id]: curr.count }),
+        { own: 0, partner: 0, dropshipping: 0 } as Record<
+          "own" | "partner" | "dropshipping",
+          number
+        >,
+      ),
+    [overview],
+  );
 
   async function loadData() {
-    const [overviewRes, productsRes, ordersRes, categoriesRes, vendorsRes] =
+    const [overviewRes, productsRes, ordersRes, categoriesRes, vendorsRes, brandsRes] =
       await Promise.all([
         fetch("/api/admin/overview", { cache: "no-store" }),
         fetch("/api/admin/products", { cache: "no-store" }),
         fetch("/api/admin/orders", { cache: "no-store" }),
         fetch("/api/admin/categories", { cache: "no-store" }),
         fetch("/api/admin/vendors", { cache: "no-store" }),
+        fetch("/api/admin/brands", { cache: "no-store" }),
       ]);
 
-    const [overviewPayload, productsPayload, ordersPayload, categoriesPayload, vendorsPayload] =
+    const [overviewPayload, productsPayload, ordersPayload, categoriesPayload, vendorsPayload, brandsPayload] =
       await Promise.all([
         overviewRes.json(),
         productsRes.json(),
         ordersRes.json(),
         categoriesRes.json(),
         vendorsRes.json(),
+        brandsRes.json(),
       ]);
 
     if (overviewPayload.ok) setOverview(overviewPayload.data);
@@ -111,6 +149,7 @@ export default function AdminDashboard() {
     if (ordersPayload.ok) setOrders(ordersPayload.data);
     if (categoriesPayload.ok) setCategories(categoriesPayload.data);
     if (vendorsPayload.ok) setVendors(vendorsPayload.data);
+    if (brandsPayload.ok) setBrands(brandsPayload.data);
   }
 
   useEffect(() => {
@@ -121,15 +160,17 @@ export default function AdminDashboard() {
       fetch("/api/admin/orders", { cache: "no-store" }),
       fetch("/api/admin/categories", { cache: "no-store" }),
       fetch("/api/admin/vendors", { cache: "no-store" }),
+      fetch("/api/admin/brands", { cache: "no-store" }),
     ])
-      .then(async ([overviewRes, productsRes, ordersRes, categoriesRes, vendorsRes]) => {
-        const [overviewPayload, productsPayload, ordersPayload, categoriesPayload, vendorsPayload] =
+      .then(async ([overviewRes, productsRes, ordersRes, categoriesRes, vendorsRes, brandsRes]) => {
+        const [overviewPayload, productsPayload, ordersPayload, categoriesPayload, vendorsPayload, brandsPayload] =
           await Promise.all([
             overviewRes.json(),
             productsRes.json(),
             ordersRes.json(),
             categoriesRes.json(),
             vendorsRes.json(),
+            brandsRes.json(),
           ]);
 
         if (!active) return;
@@ -138,6 +179,7 @@ export default function AdminDashboard() {
         if (ordersPayload.ok) setOrders(ordersPayload.data);
         if (categoriesPayload.ok) setCategories(categoriesPayload.data);
         if (vendorsPayload.ok) setVendors(vendorsPayload.data);
+        if (brandsPayload.ok) setBrands(brandsPayload.data);
       })
       .catch(() => {
         if (active) setMessage("Unable to load admin data.");
@@ -195,6 +237,7 @@ export default function AdminDashboard() {
   }
 
   async function createProduct() {
+    setMessage("");
     const res = await fetch("/api/admin/products", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -207,6 +250,7 @@ export default function AdminDashboard() {
         stock: Number(stock),
         categoryId,
         vendorId: vendorId || null,
+        brandId: brandId || null,
         featured,
         image: imageUrl,
       }),
@@ -254,6 +298,43 @@ export default function AdminDashboard() {
     }
   }
 
+  async function createBrand(payload: {
+    name: string;
+    slug: string;
+    type: "own" | "partner" | "dropshipping";
+    contactEmail: string;
+    commissionRate?: number;
+  }) {
+    setMessage("");
+    const res = await fetch("/api/admin/brands", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...payload,
+        onboardingStatus: "approved",
+        commissionRate: payload.commissionRate ?? 0,
+      }),
+    });
+    const data = await res.json();
+    setMessage(data.ok ? "Brand onboarding completed." : data.error);
+    if (data.ok) {
+      await loadData();
+    }
+  }
+
+  async function updateBrandStatus(brandIdToUpdate: string, onboardingStatus: "pending" | "approved" | "rejected") {
+    const res = await fetch("/api/admin/brands", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ brandId: brandIdToUpdate, onboardingStatus }),
+    });
+    const payload = await res.json();
+    setMessage(payload.ok ? "Brand status updated." : payload.error);
+    if (payload.ok) {
+      await loadData();
+    }
+  }
+
   async function updateOrderStatus(orderId: string, status: string) {
     const res = await fetch("/api/admin/orders", {
       method: "PATCH",
@@ -294,16 +375,17 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-4 px-4 pb-8">
       <section className="rounded-xl bg-gradient-to-r from-[#6A1B9A] to-[#8E24AA] p-4 text-white shadow-sm">
-        <h1 className="text-lg font-semibold">iBerryCart Commerce Command Center</h1>
+        <h1 className="text-lg font-semibold">iBerryCart Manager Console</h1>
         <p className="mt-1 text-xs text-white/90">
-          Unified panel for ecommerce, multivendor onboarding, dropshipping operations, and fulfillment.
+          Single-manager control center for ecommerce + hybrid dropshipping operations.
         </p>
       </section>
 
       <section className="rounded-xl bg-white p-3 shadow-sm">
-        <div className="flex flex-wrap gap-2 text-xs">
+        <div className="grid grid-cols-2 gap-2 text-xs md:grid-cols-6">
           {[
             { id: "overview", label: "Overview" },
+            { id: "brands", label: "Brand Modules" },
             { id: "products", label: "Products" },
             { id: "orders", label: "Orders" },
             { id: "vendors", label: "Vendors" },
@@ -363,7 +445,7 @@ export default function AdminDashboard() {
 
       {activePanel === "overview" ? (
         <>
-          <section className="grid grid-cols-2 gap-3">
+          <section className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
             <article className="rounded-xl bg-white p-3 shadow-sm">
               <p className="text-xs text-gray-500">Products</p>
               <p className="mt-1 text-lg font-semibold text-[#6A1B9A]">{overview?.kpis.productCount ?? 0}</p>
@@ -380,6 +462,16 @@ export default function AdminDashboard() {
               <p className="text-xs text-gray-500">Revenue</p>
               <p className="mt-1 text-lg font-semibold text-[#6A1B9A]">Rs. {overview?.kpis.grossRevenue ?? 0}</p>
             </article>
+            <article className="rounded-xl bg-white p-3 shadow-sm">
+              <p className="text-xs text-gray-500">Brands</p>
+              <p className="mt-1 text-lg font-semibold text-[#6A1B9A]">{overview?.kpis.brandCount ?? 0}</p>
+            </article>
+            <article className="rounded-xl bg-white p-3 shadow-sm">
+              <p className="text-xs text-gray-500">Brand Mix</p>
+              <p className="mt-1 text-xs font-semibold text-[#6A1B9A]">
+                Own {brandTypeCount.own} / Partner {brandTypeCount.partner} / DS {brandTypeCount.dropshipping}
+              </p>
+            </article>
           </section>
           <section className="rounded-xl bg-white p-4 shadow-sm">
             <h2 className="text-sm font-semibold text-[#6A1B9A]">Smart Alerts</h2>
@@ -387,7 +479,112 @@ export default function AdminDashboard() {
               <li>{lowStockCount} products need low-stock replenishment.</li>
               <li>{(overview?.orderStatus ?? []).find((s) => s._id === "pending")?.count ?? 0} orders pending action.</li>
               <li>{vendors.filter((v) => v.status !== "active").length} vendors need activation review.</li>
+              <li>Newest products appear automatically in public New Arrivals.</li>
             </ul>
+          </section>
+        </>
+      ) : null}
+
+      {activePanel === "brands" ? (
+        <>
+          <section className="grid gap-3 md:grid-cols-3">
+            <article className="rounded-xl bg-white p-4 shadow-sm">
+              <h2 className="text-sm font-semibold text-[#6A1B9A]">Own Brand Module</h2>
+              <div className="mt-2 space-y-2">
+                <input className="w-full rounded-lg border border-gray-200 p-2 text-sm" placeholder="Brand Name" value={ownBrandName} onChange={(e) => setOwnBrandName(e.target.value)} />
+                <input className="w-full rounded-lg border border-gray-200 p-2 text-sm" placeholder="brand-slug" value={ownBrandSlug} onChange={(e) => setOwnBrandSlug(e.target.value)} />
+                <input className="w-full rounded-lg border border-gray-200 p-2 text-sm" placeholder="Contact Email" value={ownBrandEmail} onChange={(e) => setOwnBrandEmail(e.target.value)} />
+                <button
+                  type="button"
+                  onClick={() =>
+                    void createBrand({
+                      name: ownBrandName,
+                      slug: ownBrandSlug,
+                      type: "own",
+                      contactEmail: ownBrandEmail,
+                      commissionRate: 0,
+                    })
+                  }
+                  className="rounded-full bg-[#6A1B9A] px-4 py-2 text-xs text-white"
+                >
+                  Add Own Brand
+                </button>
+              </div>
+            </article>
+
+            <article className="rounded-xl bg-white p-4 shadow-sm">
+              <h2 className="text-sm font-semibold text-[#6A1B9A]">Partner Brand Onboarding</h2>
+              <div className="mt-2 space-y-2">
+                <input className="w-full rounded-lg border border-gray-200 p-2 text-sm" placeholder="Brand Name" value={partnerBrandName} onChange={(e) => setPartnerBrandName(e.target.value)} />
+                <input className="w-full rounded-lg border border-gray-200 p-2 text-sm" placeholder="partner-brand-slug" value={partnerBrandSlug} onChange={(e) => setPartnerBrandSlug(e.target.value)} />
+                <input className="w-full rounded-lg border border-gray-200 p-2 text-sm" placeholder="Contact Email" value={partnerBrandEmail} onChange={(e) => setPartnerBrandEmail(e.target.value)} />
+                <button
+                  type="button"
+                  onClick={() =>
+                    void createBrand({
+                      name: partnerBrandName,
+                      slug: partnerBrandSlug,
+                      type: "partner",
+                      contactEmail: partnerBrandEmail,
+                      commissionRate: 8,
+                    })
+                  }
+                  className="rounded-full bg-[#6A1B9A] px-4 py-2 text-xs text-white"
+                >
+                  Onboard Partner Brand
+                </button>
+              </div>
+            </article>
+
+            <article className="rounded-xl bg-white p-4 shadow-sm">
+              <h2 className="text-sm font-semibold text-[#6A1B9A]">Dropshipping Onboarding</h2>
+              <div className="mt-2 space-y-2">
+                <input className="w-full rounded-lg border border-gray-200 p-2 text-sm" placeholder="Brand Name" value={dropshipBrandName} onChange={(e) => setDropshipBrandName(e.target.value)} />
+                <input className="w-full rounded-lg border border-gray-200 p-2 text-sm" placeholder="dropship-brand-slug" value={dropshipBrandSlug} onChange={(e) => setDropshipBrandSlug(e.target.value)} />
+                <input className="w-full rounded-lg border border-gray-200 p-2 text-sm" placeholder="Contact Email" value={dropshipBrandEmail} onChange={(e) => setDropshipBrandEmail(e.target.value)} />
+                <input className="w-full rounded-lg border border-gray-200 p-2 text-sm" type="number" placeholder="Commission %" value={dropshipCommission} onChange={(e) => setDropshipCommission(Number(e.target.value))} />
+                <button
+                  type="button"
+                  onClick={() =>
+                    void createBrand({
+                      name: dropshipBrandName,
+                      slug: dropshipBrandSlug,
+                      type: "dropshipping",
+                      contactEmail: dropshipBrandEmail,
+                      commissionRate: dropshipCommission,
+                    })
+                  }
+                  className="rounded-full bg-[#6A1B9A] px-4 py-2 text-xs text-white"
+                >
+                  Onboard Dropshipping Brand
+                </button>
+              </div>
+            </article>
+          </section>
+
+          <section className="rounded-xl bg-white p-4 shadow-sm">
+            <h2 className="text-sm font-semibold text-[#6A1B9A]">Brand Directory</h2>
+            <div className="mt-2 space-y-2">
+              {brands.map((brand) => (
+                <article key={brand._id} className="rounded-lg border border-gray-100 p-2 text-xs text-gray-600">
+                  <p className="font-medium text-gray-800">{brand.name} ({brand.type})</p>
+                  <p>Slug: {brand.slug} | Status: {brand.onboardingStatus}</p>
+                  <p>Contact: {brand.contactEmail || "-"} | Commission: {brand.commissionRate ?? 0}%</p>
+                  <div className="mt-2 flex gap-1">
+                    {(["pending", "approved", "rejected"] as const).map((status) => (
+                      <button
+                        key={status}
+                        type="button"
+                        onClick={() => void updateBrandStatus(brand._id, status)}
+                        className="rounded-full bg-[#F3E8FF] px-2 py-1 text-[10px] text-[#6A1B9A]"
+                      >
+                        {status}
+                      </button>
+                    ))}
+                  </div>
+                </article>
+              ))}
+            </div>
           </section>
         </>
       ) : null}
@@ -414,6 +611,14 @@ export default function AdminDashboard() {
                   <option key={vendor._id} value={vendor._id}>{vendor.name}</option>
                 ))}
               </select>
+              <select className="w-full rounded-lg border border-gray-200 p-2 text-sm" value={brandId} onChange={(e) => setBrandId(e.target.value)}>
+                <option value="">Select Brand</option>
+                {brands.map((brand) => (
+                  <option key={brand._id} value={brand._id}>
+                    {brand.name} ({brand.type})
+                  </option>
+                ))}
+              </select>
               <div className="grid grid-cols-3 gap-2">
                 <input className="rounded-lg border border-gray-200 p-2 text-sm" placeholder="Price" value={price} onChange={(e) => setPrice(Number(e.target.value))} type="number" />
                 <input className="rounded-lg border border-gray-200 p-2 text-sm" placeholder="Discount" value={discountPrice} onChange={(e) => setDiscountPrice(Number(e.target.value))} type="number" />
@@ -433,7 +638,9 @@ export default function AdminDashboard() {
                 <article key={product._id} className="rounded-lg border border-gray-100 p-2 text-xs text-gray-600">
                   <p className="font-medium text-gray-800">{product.name}</p>
                   <p>Rs. {product.price} | Stock: {product.stock} | Category: {product.category?.name ?? "-"}</p>
-                  <p>Vendor: {product.vendor?.name ?? "In-house"} | {product.featured ? "Featured" : "Standard"}</p>
+                  <p>
+                    Brand: {product.brand?.name ?? "-"} | Vendor: {product.vendor?.name ?? "In-house"} | {product.featured ? "Featured" : "Standard"}
+                  </p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     <button
                       type="button"

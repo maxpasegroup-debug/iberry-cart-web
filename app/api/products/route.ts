@@ -40,6 +40,7 @@ export async function GET(req: Request) {
     const products = await ProductModel.find(filter)
       .populate("category", "name slug")
       .populate("vendor", "name status")
+      .populate("brand", "name type")
       .sort({ createdAt: -1 })
       .lean();
 
