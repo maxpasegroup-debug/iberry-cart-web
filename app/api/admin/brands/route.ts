@@ -3,6 +3,7 @@ import { connectToDatabase } from "@/lib/db";
 import { errorResponse, successResponse } from "@/lib/api-response";
 import { adminBrandSchema } from "@/lib/validation";
 import BrandModel from "@/models/Brand";
+import { z } from "zod";
 
 export async function GET() {
   const admin = await requireAdminApiUser();
@@ -42,15 +43,21 @@ export async function PATCH(req: Request) {
   try {
     await connectToDatabase();
     const body = await req.json();
-    const brandId = body.brandId as string;
-    const status = body.onboardingStatus as "pending" | "approved" | "rejected";
-    if (!brandId || !status) {
-      return errorResponse("Missing brandId or onboardingStatus", 400);
+    const adminBrandPatchSchema = z.object({
+      brandId: z.string().min(1),
+      onboardingStatus: z.enum(["pending", "approved", "rejected"]),
+    });
+
+    const parsed = adminBrandPatchSchema.safeParse(body);
+    if (!parsed.success) {
+      return errorResponse("Invalid brand payload", 400, parsed.error.flatten());
     }
+
+    const { brandId, onboardingStatus } = parsed.data;
 
     const brand = await BrandModel.findByIdAndUpdate(
       brandId,
-      { onboardingStatus: status },
+      { onboardingStatus },
       { new: true },
     );
     if (!brand) return errorResponse("Brand not found", 404);

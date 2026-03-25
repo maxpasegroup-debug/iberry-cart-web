@@ -4,7 +4,12 @@ type SkeletonLoaderProps = {
 
 export default function SkeletonLoader({ count = 4 }: SkeletonLoaderProps) {
   return (
-    <div className="grid grid-cols-2 gap-3 px-4">
+    <div
+      className="grid grid-cols-2 gap-3 px-4"
+      role="status"
+      aria-busy="true"
+      aria-label="Loading products"
+    >
       {Array.from({ length: count }).map((_, idx) => (
         <div key={idx} className="animate-pulse rounded-xl bg-white p-3 shadow-sm">
           <div className="h-24 rounded-lg bg-[#F3E8FF]" />

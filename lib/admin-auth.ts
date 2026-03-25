@@ -4,7 +4,11 @@ import { connectToDatabase } from "@/lib/db";
 import { hasMongoConfig } from "@/lib/env";
 
 function getManagerEmail() {
-  return (process.env.ADMIN_BOOTSTRAP_EMAIL ?? "admin@iberrycart.com").toLowerCase();
+  const email = process.env.ADMIN_BOOTSTRAP_EMAIL;
+  if (!email) {
+    throw new Error("Missing ADMIN_BOOTSTRAP_EMAIL in environment variables.");
+  }
+  return email.toLowerCase();
 }
 
 function isSingleManagerMode() {
@@ -15,12 +19,25 @@ function isSingleManagerMode() {
 
 export async function ensureDefaultAdminUser() {
   const adminEmail = getManagerEmail();
-  const adminPassword = process.env.ADMIN_BOOTSTRAP_PASSWORD ?? "ChangeMe@123";
+  const adminPassword = process.env.ADMIN_BOOTSTRAP_PASSWORD;
+  if (!adminPassword) {
+    throw new Error("Missing ADMIN_BOOTSTRAP_PASSWORD in environment variables.");
+  }
+  if (adminPassword === "ChangeMe@123") {
+    throw new Error("ADMIN_BOOTSTRAP_PASSWORD must not use the default value.");
+  }
   if (adminPassword.length < 8) {
-    throw new Error("ADMIN_BOOTSTRAP_PASSWORD must be at least 8 characters.");
+    throw new Error("ADMIN_BOOTSTRAP_PASSWORD must be at least 10 characters.");
   }
   const existingAdmin = await UserModel.findOne({ email: adminEmail });
-  if (existingAdmin) return existingAdmin;
+  if (existingAdmin) {
+    if (existingAdmin.role !== "admin") {
+      throw new Error(
+        "ADMIN_BOOTSTRAP_EMAIL is already registered with a non-admin role. Update/remove that user before starting the platform.",
+      );
+    }
+    return existingAdmin;
+  }
 
   return UserModel.create({
     name: "iBerryCart Admin",
@@ -36,12 +53,19 @@ export async function requireAdminApiUser() {
     return null;
   }
 
-  if (!isSingleManagerMode()) return authUser;
+  // Always re-check role in DB so JWT claims can't become stale.
+  try {
+    await connectToDatabase();
+  } catch {
+    return null;
+  }
 
-  await connectToDatabase();
-  const managerEmail = getManagerEmail();
   const adminUser = await UserModel.findById(authUser.userId).select("email role").lean();
   if (!adminUser || adminUser.role !== "admin") return null;
+
+  if (!isSingleManagerMode()) return authUser;
+
+  const managerEmail = getManagerEmail();
   if ((adminUser.email ?? "").toLowerCase() !== managerEmail) return null;
   return authUser;
 }
@@ -50,7 +74,12 @@ export async function getAdminSessionUser() {
   if (!hasMongoConfig()) {
     return null;
   }
-  await connectToDatabase();
-  await ensureDefaultAdminUser();
-  return getAuthUserFromCookie();
+  try {
+    await connectToDatabase();
+    await ensureDefaultAdminUser();
+    return getAuthUserFromCookie();
+  } catch {
+    // Avoid leaking setup/config errors to the client.
+    return null;
+  }
 }

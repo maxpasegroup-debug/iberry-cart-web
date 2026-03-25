@@ -3,6 +3,7 @@ import { connectToDatabase } from "@/lib/db";
 import { errorResponse, successResponse } from "@/lib/api-response";
 import { adminVendorSchema } from "@/lib/validation";
 import VendorModel from "@/models/Vendor";
+import { z } from "zod";
 
 export async function GET() {
   const admin = await requireAdminApiUser();
@@ -42,11 +43,18 @@ export async function PATCH(req: Request) {
   try {
     await connectToDatabase();
     const body = await req.json();
-    const vendorId = body.vendorId as string;
-    const status = body.status as "pending" | "active" | "suspended";
-    if (!vendorId || !status) {
-      return errorResponse("Missing vendorId or status", 400);
+
+    const adminVendorPatchSchema = z.object({
+      vendorId: z.string().min(1),
+      status: z.enum(["pending", "active", "suspended"]),
+    });
+
+    const parsed = adminVendorPatchSchema.safeParse(body);
+    if (!parsed.success) {
+      return errorResponse("Invalid vendor status payload", 400, parsed.error.flatten());
     }
+
+    const { vendorId, status } = parsed.data;
     const vendor = await VendorModel.findByIdAndUpdate(
       vendorId,
       { status },

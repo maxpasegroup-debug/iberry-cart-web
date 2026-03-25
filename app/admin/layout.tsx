@@ -25,11 +25,17 @@ export default async function AdminLayout({
           <Link href="/admin/products" className="rounded-full bg-[#8E24AA] px-3 py-1 text-xs text-white">
             Products
           </Link>
+          <Link href="/admin/brands" className="rounded-full bg-[#8E24AA] px-3 py-1 text-xs text-white">
+            Brands
+          </Link>
           <Link href="/admin/categories" className="rounded-full bg-[#8E24AA] px-3 py-1 text-xs text-white">
             Categories
           </Link>
           <Link href="/admin/orders" className="rounded-full bg-[#8E24AA] px-3 py-1 text-xs text-white">
             Orders
+          </Link>
+          <Link href="/admin/vendors" className="rounded-full bg-[#8E24AA] px-3 py-1 text-xs text-white">
+            Vendors
           </Link>
           <Link href="/admin/inventory" className="rounded-full bg-[#8E24AA] px-3 py-1 text-xs text-white">
             Inventory

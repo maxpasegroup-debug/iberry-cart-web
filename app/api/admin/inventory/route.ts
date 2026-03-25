@@ -3,6 +3,12 @@ import { requireAdminApiUser } from "@/lib/admin-auth";
 import { connectToDatabase } from "@/lib/db";
 import { errorResponse, successResponse } from "@/lib/api-response";
 import ProductModel from "@/models/Product";
+import { z } from "zod";
+
+const adminInventoryPatchSchema = z.object({
+  productId: z.string().min(1),
+  stock: z.number().int().min(0),
+});
 
 export async function PATCH(req: NextRequest) {
   const admin = await requireAdminApiUser();
@@ -11,11 +17,12 @@ export async function PATCH(req: NextRequest) {
   try {
     await connectToDatabase();
     const body = await req.json();
-    const productId = body.productId as string;
-    const stock = body.stock as number;
-    if (!productId || stock === undefined) {
-      return errorResponse("Missing productId or stock", 400);
+    const parsed = adminInventoryPatchSchema.safeParse(body);
+    if (!parsed.success) {
+      return errorResponse("Invalid inventory payload", 400, parsed.error.flatten());
     }
+
+    const { productId, stock } = parsed.data;
 
     const product = await ProductModel.findByIdAndUpdate(
       productId,

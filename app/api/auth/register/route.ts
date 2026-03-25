@@ -14,8 +14,14 @@ export async function POST(req: Request) {
     if (!parsed.success) {
       return errorResponse("Invalid register payload", 400, parsed.error.flatten());
     }
-    if (parsed.data.email.toLowerCase() === "admin@iberrycart.com") {
-      return errorResponse("This email is reserved", 403);
+
+    const configuredBootstrapAdminEmailRaw = process.env.ADMIN_BOOTSTRAP_EMAIL;
+    if (!configuredBootstrapAdminEmailRaw) {
+      throw new Error("Missing ADMIN_BOOTSTRAP_EMAIL in environment variables.");
+    }
+    const configuredBootstrapAdminEmail = configuredBootstrapAdminEmailRaw.toLowerCase();
+    if (parsed.data.email.toLowerCase() === configuredBootstrapAdminEmail) {
+      return errorResponse("This email is reserved for admin bootstrap", 403);
     }
 
     const existing = await UserModel.findOne({ email: parsed.data.email.toLowerCase() });

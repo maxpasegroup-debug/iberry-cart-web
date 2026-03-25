@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { withCsrfHeaders } from "@/lib/csrf-client";
 
 declare global {
   interface Window {
@@ -48,7 +49,7 @@ export default function CheckoutClient() {
     try {
       const orderRes = await fetch("/api/orders", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: await withCsrfHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({ address }),
       });
       const orderPayload = await orderRes.json();
@@ -56,7 +57,7 @@ export default function CheckoutClient() {
 
       const paymentRes = await fetch("/api/payment/create-order", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: await withCsrfHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({ orderId: orderPayload.data._id }),
       });
       const paymentPayload = await paymentRes.json();
@@ -79,7 +80,7 @@ export default function CheckoutClient() {
         handler: async (response: Record<string, string>) => {
           const verifyRes = await fetch("/api/payment/verify", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: await withCsrfHeaders({ "Content-Type": "application/json" }),
             body: JSON.stringify(response),
           });
           const verifyPayload = await verifyRes.json();

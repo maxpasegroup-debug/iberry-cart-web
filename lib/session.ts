@@ -11,7 +11,7 @@ export async function getOrCreateSessionId() {
   const sessionId = randomUUID();
   cookieStore.set(CART_SESSION_COOKIE, sessionId, {
     httpOnly: true,
-    sameSite: "lax",
+    sameSite: "strict",
     secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: 60 * 60 * 24 * 30,

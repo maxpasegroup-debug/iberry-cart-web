@@ -1,8 +1,8 @@
-import Image from "next/image";
 import Link from "next/link";
 import PriceBlock from "@/components/PriceBlock";
 import RatingStars from "@/components/RatingStars";
 import Badge from "@/components/Badge";
+import SmartImage from "@/components/SmartImage";
 
 type ProductCardProps = {
   product: {
@@ -22,7 +22,13 @@ export default function ProductCard({ product }: ProductCardProps) {
     <article className="overflow-hidden rounded-xl bg-white shadow-sm">
       <Link href={`/products/${product.slug}`} className="block">
         <div className="relative h-32 w-full bg-[#F3E8FF]">
-          <Image src={product.image} alt={product.name} fill className="object-cover" sizes="(max-width: 768px) 50vw, 25vw" />
+          <SmartImage
+            src={product.image}
+            alt={product.name}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 50vw, 25vw"
+          />
           {product.featured ? (
             <div className="absolute left-2 top-2">
               <Badge>Featured</Badge>

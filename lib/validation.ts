@@ -76,13 +76,28 @@ export const adminProductSchema = z.object({
   slug: z.string().min(2),
   description: z.string().min(10),
   price: z.number().positive(),
-  discountPrice: z.number().positive().optional().nullable(),
+  discountPrice: z.number().min(0).optional().nullable(),
   stock: z.number().int().min(0),
   categoryId: z.string().min(1),
   vendorId: z.string().optional().nullable(),
   brandId: z.string().optional().nullable(),
   featured: z.boolean().default(false),
-  image: z.string().url(),
+  image: z
+    .string()
+    .min(1)
+    .refine((val) => {
+      try {
+        const u = new URL(val);
+        if (u.protocol !== "http:" && u.protocol !== "https:") return false;
+        const host = u.hostname.toLowerCase();
+        const isCloudinaryHost = host === "res.cloudinary.com" || host.endsWith(".cloudinary.com");
+        if (!isCloudinaryHost) return false;
+        // Ensure it's a delivery URL for uploaded images.
+        return u.pathname.includes("/upload/");
+      } catch {
+        return false;
+      }
+    }, "Image must be a Cloudinary URL (from /upload/ delivery path)"),
 });
 
 export const adminCategorySchema = z.object({

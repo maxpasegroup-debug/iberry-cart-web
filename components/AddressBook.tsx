@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { withCsrfHeaders } from "@/lib/csrf-client";
 
 type Address = {
   _id: string;
@@ -54,9 +55,12 @@ export default function AddressBook() {
 
   async function saveAddress() {
     setMessage("");
+    const headers = await withCsrfHeaders({
+      "Content-Type": "application/json",
+    });
     const res = await fetch("/api/address", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify(form),
     });
     const payload = await res.json();

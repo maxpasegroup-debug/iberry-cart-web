@@ -5,7 +5,7 @@ import { errorResponse, successResponse } from "@/lib/api-response";
 import { paymentVerifySchema } from "@/lib/validation";
 import PaymentModel from "@/models/Payment";
 import OrderModel from "@/models/Order";
-import { captureServerError } from "@/lib/monitoring";
+import { captureServerError, logCriticalAction } from "@/lib/monitoring";
 
 export async function POST(req: Request) {
   let dbSession: mongoose.ClientSession | null = null;
@@ -25,6 +25,10 @@ export async function POST(req: Request) {
       .digest("hex");
 
     if (digest !== parsed.data.razorpay_signature) {
+      logCriticalAction("payment_verify_failed", {
+        reason: "invalid_signature",
+        razorpayOrderId: parsed.data.razorpay_order_id,
+      });
       return errorResponse("Invalid payment signature", 400);
     }
 
@@ -36,11 +40,20 @@ export async function POST(req: Request) {
     }).session(dbSession);
 
     if (!payment) {
+      logCriticalAction("payment_verify_failed", {
+        reason: "payment_record_not_found",
+        razorpayOrderId: parsed.data.razorpay_order_id,
+      });
       await dbSession.abortTransaction();
       return errorResponse("Payment record not found", 404);
     }
 
     if (payment.status === "captured") {
+      logCriticalAction("payment_verified_success", {
+        paymentId: String(payment._id),
+        razorpayOrderId: parsed.data.razorpay_order_id,
+        razorpayPaymentId: parsed.data.razorpay_payment_id,
+      });
       await dbSession.commitTransaction();
       return successResponse(
         { verified: true, paymentId: payment._id },
@@ -60,11 +73,21 @@ export async function POST(req: Request) {
 
     await dbSession.commitTransaction();
 
+    logCriticalAction("payment_verified_success", {
+      paymentId: String(payment._id),
+      razorpayOrderId: parsed.data.razorpay_order_id,
+      razorpayPaymentId: parsed.data.razorpay_payment_id,
+    });
+
     return successResponse({ verified: true, paymentId: payment._id }, "Payment verified");
   } catch (error) {
     if (dbSession) {
       await dbSession.abortTransaction();
     }
+    logCriticalAction("payment_verify_failed", {
+      reason: "exception",
+      error: error instanceof Error ? error.message : String(error),
+    });
     captureServerError(error, { route: "/api/payment/verify", action: "POST" });
     return errorResponse("Failed to verify payment", 500, String(error));
   } finally {

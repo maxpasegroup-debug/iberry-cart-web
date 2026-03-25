@@ -9,6 +9,14 @@ type AuthTokenPayload = {
   role: "customer" | "admin";
 };
 
+function isValidAuthTokenPayload(payload: unknown): payload is AuthTokenPayload {
+  if (!payload || typeof payload !== "object") return false;
+  const p = payload as Record<string, unknown>;
+  const userId = p.userId;
+  const role = p.role;
+  return typeof userId === "string" && (role === "customer" || role === "admin");
+}
+
 function getJwtSecret() {
   const secret = process.env.JWT_SECRET;
   if (!secret) {
@@ -26,18 +34,27 @@ export async function comparePassword(password: string, hashedPassword: string) 
 }
 
 export function signAuthToken(payload: AuthTokenPayload) {
-  return jwt.sign(payload, getJwtSecret(), { expiresIn: "7d" });
+  return jwt.sign(payload, getJwtSecret(), {
+    expiresIn: "7d",
+    algorithm: "HS256",
+  });
 }
 
 export function verifyAuthToken(token: string) {
-  return jwt.verify(token, getJwtSecret()) as AuthTokenPayload;
+  const decoded = jwt.verify(token, getJwtSecret(), {
+    algorithms: ["HS256"],
+  });
+  if (!isValidAuthTokenPayload(decoded)) {
+    throw new Error("Invalid auth token payload");
+  }
+  return decoded;
 }
 
 export async function setAuthCookie(token: string) {
   const cookieStore = await cookies();
   cookieStore.set(AUTH_COOKIE, token, {
     httpOnly: true,
-    sameSite: "lax",
+    sameSite: "strict",
     secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: 60 * 60 * 24 * 7,
@@ -48,7 +65,7 @@ export async function clearAuthCookie() {
   const cookieStore = await cookies();
   cookieStore.set(AUTH_COOKIE, "", {
     httpOnly: true,
-    sameSite: "lax",
+    sameSite: "strict",
     secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: 0,
@@ -62,7 +79,14 @@ export async function getAuthUserFromCookie() {
 
   try {
     return verifyAuthToken(token);
-  } catch {
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      error.message.toLowerCase().includes("missing jwt_secret")
+    ) {
+      // Misconfiguration: fail fast instead of silently treating as logged out.
+      throw error;
+    }
     return null;
   }
 }

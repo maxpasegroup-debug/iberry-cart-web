@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Poppins } from "next/font/google";
+import ConditionalFooter from "@/components/ConditionalFooter";
 import "./globals.css";
 
 function getMetadataBaseUrl() {
@@ -48,9 +49,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.variable} ${poppins.variable} ${noopMono.variable} bg-[#F3E8FF] antialiased`}
+        className={`${inter.variable} ${poppins.variable} ${noopMono.variable} flex min-h-screen flex-col bg-[#F3E8FF] antialiased`}
       >
-        {children}
+        <div className="flex min-h-0 flex-1 flex-col">{children}</div>
+        <ConditionalFooter />
       </body>
     </html>
   );

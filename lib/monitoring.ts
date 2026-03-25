@@ -14,3 +14,11 @@ export function captureServerError(error: unknown, context?: ErrorContext) {
     sentryEnabled: Boolean(process.env.SENTRY_DSN),
   });
 }
+
+export function logCriticalAction(action: string, metadata?: Record<string, unknown>) {
+  console.info("[iberrycart:action]", {
+    action,
+    ...(metadata ? { metadata } : {}),
+    ts: new Date().toISOString(),
+  });
+}

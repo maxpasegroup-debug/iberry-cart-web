@@ -5,6 +5,8 @@ import { paymentCreateSchema } from "@/lib/validation";
 import OrderModel from "@/models/Order";
 import PaymentModel from "@/models/Payment";
 import { captureServerError } from "@/lib/monitoring";
+import { getAuthUserFromCookie } from "@/lib/auth";
+import { getOrCreateSessionId } from "@/lib/session";
 
 function razorpayClient() {
   const keyId = process.env.RAZORPAY_KEY_ID;
@@ -18,6 +20,8 @@ function razorpayClient() {
 export async function POST(req: Request) {
   try {
     await connectToDatabase();
+    const authUser = await getAuthUserFromCookie();
+    const sessionId = await getOrCreateSessionId();
     const body = await req.json();
     const parsed = paymentCreateSchema.safeParse(body);
 
@@ -26,7 +30,16 @@ export async function POST(req: Request) {
     }
 
     const order = await OrderModel.findById(parsed.data.orderId);
+
     if (!order) return errorResponse("Order not found", 404);
+
+    const ownsOrder =
+      String(order.sessionId) === String(sessionId) ||
+      (!!authUser?.userId && String(order.user ?? "") === String(authUser.userId));
+
+    // Prevent users from generating payment sessions for other people's orders.
+    if (!ownsOrder) return errorResponse("Order not found", 404);
+
     if (order.paymentStatus === "paid") {
       return errorResponse("Order is already paid", 409);
     }

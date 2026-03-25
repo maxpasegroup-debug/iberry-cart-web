@@ -43,6 +43,9 @@ export default async function AccountPage() {
       <section className="mx-4 mt-4 rounded-xl bg-white p-4 shadow-sm">
         <h2 className="text-sm font-semibold text-[#6A1B9A]">Quick Actions</h2>
         <div className="mt-3 flex flex-wrap gap-2">
+          <Link href="/account/orders" className="rounded-full bg-white px-4 py-2 text-xs text-[#6A1B9A] border border-[#E9D5FF]">
+            Orders
+          </Link>
           <Link href="/cart" className="rounded-full bg-[#6A1B9A] px-4 py-2 text-xs text-white">
             View Cart
           </Link>

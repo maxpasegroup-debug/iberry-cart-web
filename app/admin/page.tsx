@@ -8,6 +8,6 @@ export const metadata: Metadata = {
 
 export default function AdminPage() {
   return (
-    <AdminDashboard />
+    <AdminDashboard initialPanel="overview" />
   );
 }

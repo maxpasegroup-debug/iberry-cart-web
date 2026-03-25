@@ -4,6 +4,7 @@ import { connectToDatabase } from "@/lib/db";
 import { errorResponse, successResponse } from "@/lib/api-response";
 import { adminProductSchema } from "@/lib/validation";
 import ProductModel from "@/models/Product";
+import { z } from "zod";
 
 export async function GET() {
   const admin = await requireAdminApiUser();
@@ -62,15 +63,18 @@ export async function PATCH(req: NextRequest) {
   try {
     await connectToDatabase();
     const body = await req.json();
-    const productId = body.productId as string;
 
-    if (!productId) return errorResponse("Missing productId", 400);
-    const parsed = adminProductSchema.partial().safeParse(body);
+    const adminProductPatchSchema = adminProductSchema.partial().extend({
+      productId: z.string().min(1),
+    });
+
+    const parsed = adminProductPatchSchema.safeParse(body);
     if (!parsed.success) {
       return errorResponse("Invalid update payload", 400, parsed.error.flatten());
     }
 
-    const updateData: Record<string, unknown> = { ...parsed.data };
+    const { productId, ...partialUpdate } = parsed.data;
+    const updateData: Record<string, unknown> = { ...partialUpdate };
     if (parsed.data.categoryId) {
       updateData.category = parsed.data.categoryId;
       delete updateData.categoryId;

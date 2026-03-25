@@ -1,17 +1,21 @@
-import { Leaf, ShieldCheck, Sparkles, Truck } from "lucide-react";
+import { ChefHat, Leaf, ShieldCheck, Truck } from "lucide-react";
 
 const features = [
   { title: "100% Natural", icon: Leaf },
-  { title: "Premium Quality", icon: Sparkles },
+  { title: "Freshly Prepared", icon: ChefHat },
   { title: "Secure Payments", icon: ShieldCheck },
   { title: "Fast Delivery", icon: Truck },
 ];
 
-export default function WhyChoose() {
+type WhyChooseProps = {
+  className?: string;
+};
+
+export default function WhyChoose({ className = "" }: WhyChooseProps) {
   return (
-    <section className="lg:mx-auto lg:max-w-screen-xl">
+    <section className={`lg:mx-auto lg:max-w-screen-xl ${className}`}>
       <h3 className="mx-4 mt-6 text-lg font-semibold font-[Poppins] text-[#6A1B9A] lg:mx-0 lg:mt-7">
-        Why Choose iBerryCart
+        Why choose iBerryCart
       </h3>
 
       <div className="mt-3 grid grid-cols-2 gap-4 px-4 lg:mx-0 lg:grid-cols-4 lg:px-0">

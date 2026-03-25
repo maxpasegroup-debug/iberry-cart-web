@@ -1,12 +1,15 @@
-import Image from "next/image";
 import type { Metadata } from "next";
 import AddToCartButton from "@/components/AddToCartButton";
 import PriceBlock from "@/components/PriceBlock";
 import RatingStars from "@/components/RatingStars";
 import Badge from "@/components/Badge";
 import EmptyState from "@/components/EmptyState";
+import StockIndicator from "@/components/StockIndicator";
+import TrustBadges from "@/components/TrustBadges";
+import WhyChoose from "@/components/WhyChoose";
 import { apiFetchSafe } from "@/lib/server-fetch";
 import type { Product } from "@/lib/types";
+import SmartImage from "@/components/SmartImage";
 
 type Params = {
   params: Promise<{ slug: string }>;
@@ -40,21 +43,25 @@ export default async function ProductDetailsPage({ params }: Params) {
     <div className="min-h-screen bg-[#F3E8FF] pb-[81px] lg:pb-6">
       <section className="mx-4 mt-4 overflow-hidden rounded-xl bg-white shadow-sm lg:mx-auto lg:mt-8 lg:max-w-screen-lg">
         <div className="relative h-64 w-full bg-[#F3E8FF]">
-          <Image src={product.image} alt={product.name} fill className="object-cover" sizes="100vw" />
+          <SmartImage src={product.image} alt={product.name} fill className="object-cover" sizes="100vw" />
         </div>
         <div className="space-y-3 p-4">
+          <TrustBadges />
           <div className="flex items-start justify-between gap-2">
             <h1 className="text-lg font-semibold text-gray-800">{product.name}</h1>
             {product.featured ? <Badge>Featured</Badge> : null}
           </div>
+          <StockIndicator stock={product.stock} />
           <RatingStars value={product.rating ?? 4.5} />
           <PriceBlock price={product.price} discountPrice={product.discountPrice} />
           <p className="text-sm text-gray-600">{product.description}</p>
           <div className="pt-1">
-            <AddToCartButton productId={product._id} />
+            <AddToCartButton productId={product._id} disabled={product.stock <= 0} />
           </div>
         </div>
       </section>
+
+      <WhyChoose className="mt-6 pb-4" />
     </div>
   );
 }

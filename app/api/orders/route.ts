@@ -1,15 +1,16 @@
-import { randomUUID } from "crypto";
+import { createHash, randomUUID } from "crypto";
 import mongoose from "mongoose";
 import { connectToDatabase } from "@/lib/db";
 import { errorResponse, successResponse } from "@/lib/api-response";
 import { getOrCreateSessionId } from "@/lib/session";
+import { getAuthUserFromCookie } from "@/lib/auth";
 import { orderSchema } from "@/lib/validation";
 import { calculateCartTotals } from "@/lib/cart";
 import CartModel from "@/models/Cart";
 import OrderModel from "@/models/Order";
 import CouponModel from "@/models/Coupon";
 import ProductModel from "@/models/Product";
-import { captureServerError } from "@/lib/monitoring";
+import { captureServerError, logCriticalAction } from "@/lib/monitoring";
 
 type OrderLine = {
   product: {
@@ -23,8 +24,32 @@ type OrderLine = {
   quantity: number;
 };
 
+export async function GET() {
+  try {
+    await connectToDatabase();
+    const sessionId = await getOrCreateSessionId();
+    const authUser = await getAuthUserFromCookie();
+
+    const query =
+      authUser?.userId
+        ? { $or: [{ sessionId }, { user: authUser.userId }] }
+        : { sessionId };
+
+    const orders = await OrderModel.find(query)
+      .sort({ createdAt: -1 })
+      .limit(20)
+      .lean();
+
+    return successResponse(JSON.parse(JSON.stringify(orders)));
+  } catch (error) {
+    return errorResponse("Failed to fetch orders", 500, String(error));
+  }
+}
+
 export async function POST(req: Request) {
   let dbSession: mongoose.ClientSession | null = null;
+  let sessionId: string | null = null;
+  let idempotencyKey: string | null = null;
   try {
     await connectToDatabase();
     const body = await req.json();
@@ -34,21 +59,9 @@ export async function POST(req: Request) {
       return errorResponse("Invalid order payload", 400, parsed.error.flatten());
     }
 
-    const sessionId = await getOrCreateSessionId();
-    const idempotencyKey = req.headers.get("x-idempotency-key")?.trim() || null;
-
-    if (idempotencyKey) {
-      const existingOrder = await OrderModel.findOne({
-        sessionId,
-        idempotencyKey,
-      }).lean();
-      if (existingOrder) {
-        return successResponse(
-          JSON.parse(JSON.stringify(existingOrder)),
-          "Order already created",
-        );
-      }
-    }
+    sessionId = await getOrCreateSessionId();
+    const authUser = await getAuthUserFromCookie();
+    const providedIdempotencyKey = req.headers.get("x-idempotency-key")?.trim() || null;
 
     dbSession = await mongoose.startSession();
     dbSession.startTransaction();
@@ -110,10 +123,46 @@ export async function POST(req: Request) {
     }
 
     const finalTotal = Math.max(0, totals.total - discountAdjustment);
+
+    // Compute a deterministic idempotency key when the client doesn't send one.
+    // This prevents accidental duplicate orders on retries/double-clicks.
+    const cartSnapshot = lines
+      .map((line) => ({
+        productId: String(line.product._id),
+        quantity: line.quantity,
+      }))
+      .sort((a, b) => a.productId.localeCompare(b.productId));
+
+    idempotencyKey =
+      providedIdempotencyKey ??
+      createHash("sha256")
+        .update(
+          JSON.stringify({
+            sessionId,
+            userId: authUser?.userId ?? null,
+            address: parsed.data.address,
+            couponCode: parsed.data.couponCode ?? null,
+            notes: parsed.data.notes ?? "",
+            cartSnapshot,
+          }),
+        )
+        .digest("hex");
+
+    const existingOrder = await OrderModel.findOne({
+      sessionId,
+      idempotencyKey,
+    }).session(dbSession).lean();
+
+    if (existingOrder) {
+      await dbSession.abortTransaction();
+      return successResponse(JSON.parse(JSON.stringify(existingOrder)), "Order already created");
+    }
+
     const [order] = await OrderModel.create(
       [{
       orderNumber: `IBC-${Date.now()}-${randomUUID().slice(0, 6).toUpperCase()}`,
       sessionId,
+      user: authUser?.userId ?? null,
       idempotencyKey,
       items: lines.map((line) => ({
         product: line.product._id,
@@ -151,11 +200,29 @@ export async function POST(req: Request) {
     await cart.save({ session: dbSession });
     await dbSession.commitTransaction();
 
+    logCriticalAction("order_created", {
+      orderId: String(order._id),
+      orderNumber: order.orderNumber,
+      sessionId,
+      userId: authUser?.userId ?? null,
+      total: finalTotal,
+    });
+
     return successResponse(JSON.parse(JSON.stringify(order)), "Order created", 201);
   } catch (error) {
     if (dbSession) {
       await dbSession.abortTransaction();
     }
+
+    // If two concurrent requests race, the unique idempotency index may reject one.
+    // In that case, return the already-created order instead of failing the request.
+    if (sessionId && idempotencyKey) {
+      const existingByKey = await OrderModel.findOne({ sessionId, idempotencyKey }).lean();
+      if (existingByKey) {
+        return successResponse(JSON.parse(JSON.stringify(existingByKey)), "Order already created");
+      }
+    }
+
     captureServerError(error, { route: "/api/orders", action: "POST" });
     return errorResponse("Failed to create order", 500, String(error));
   } finally {

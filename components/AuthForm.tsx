@@ -3,6 +3,7 @@
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { withCsrfHeaders } from "@/lib/csrf-client";
 
 type AuthFormProps = {
   mode: "login" | "register";
@@ -25,9 +26,12 @@ export default function AuthForm({ mode }: AuthFormProps) {
     const payload =
       mode === "register" ? { name, email, password } : { email, password };
 
+    const headers = await withCsrfHeaders({
+      "Content-Type": "application/json",
+    });
     const res = await fetch(`/api/auth/${mode}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify(payload),
     });
 

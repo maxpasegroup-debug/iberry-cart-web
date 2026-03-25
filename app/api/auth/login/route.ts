@@ -9,6 +9,7 @@ import { ensureDefaultAdminUser } from "@/lib/admin-auth";
 import { loginSchema } from "@/lib/validation";
 import UserModel from "@/models/User";
 import { captureServerError } from "@/lib/monitoring";
+import { logCriticalAction } from "@/lib/monitoring";
 
 export async function POST(req: Request) {
   try {
@@ -24,7 +25,11 @@ export async function POST(req: Request) {
     const user = await UserModel.findOne({ email: parsed.data.email.toLowerCase() });
     if (!user) return errorResponse("Invalid credentials", 401);
 
-    const managerEmail = (process.env.ADMIN_BOOTSTRAP_EMAIL ?? "admin@iberrycart.com").toLowerCase();
+    const managerEmailRaw = process.env.ADMIN_BOOTSTRAP_EMAIL;
+    if (!managerEmailRaw) {
+      throw new Error("Missing ADMIN_BOOTSTRAP_EMAIL in environment variables.");
+    }
+    const managerEmail = managerEmailRaw.toLowerCase();
     const singleManagerMode = (process.env.SINGLE_MANAGER_MODE ?? "true").toLowerCase() !== "false";
     if (singleManagerMode && user.role === "admin" && user.email.toLowerCase() !== managerEmail) {
       return errorResponse("Unauthorized admin account", 403);
@@ -35,6 +40,10 @@ export async function POST(req: Request) {
 
     const token = signAuthToken({ userId: String(user._id), role: user.role });
     await setAuthCookie(token);
+
+    if (user.role === "admin") {
+      logCriticalAction("admin_login", { adminId: String(user._id), email: user.email });
+    }
 
     return successResponse({
       id: user._id,
