@@ -3,7 +3,7 @@ import Link from "next/link";
 import { LayoutGrid } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import EmptyState from "@/components/EmptyState";
-import { apiFetchSafe } from "@/lib/server-fetch";
+import { apiFetch } from "@/lib/server-fetch";
 import type { Product } from "@/lib/types";
 
 type Params = {
@@ -17,10 +17,12 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
 export default async function CategoryPage({ params }: Params) {
   const { slug } = await params;
-  const products = await apiFetchSafe<Product[]>(
-    `/api/products?category=${slug}`,
-    [],
-  );
+  let products: Product[] = [];
+  try {
+    products = await apiFetch<Product[]>(`/api/products?category=${slug}`);
+  } catch {
+    products = [];
+  }
 
   return (
     <div className="min-h-screen bg-[#F3E8FF] pb-[81px] lg:pb-10">
@@ -34,8 +36,8 @@ export default async function CategoryPage({ params }: Params) {
       {products.length === 0 ? (
         <div className="mt-4">
           <EmptyState
-            title="No products in this category"
-            description="Try another category or view the full catalog — new items are added regularly."
+            title="No products available"
+            description="Nothing is listed in this category yet. Try another category or view all products."
             icon={<LayoutGrid className="h-14 w-14 stroke-[1.25]" aria-hidden />}
             action={
               <Link

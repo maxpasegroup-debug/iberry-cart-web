@@ -74,7 +74,7 @@ export default function AddressBook() {
   }
 
   return (
-    <div className="space-y-3">
+    <div id="addresses" className="space-y-3 scroll-mt-24">
       <section className="rounded-xl bg-white p-4 shadow-sm">
         <h2 className="text-sm font-semibold text-[#6A1B9A]">Saved Addresses</h2>
         <div className="mt-2 space-y-2">

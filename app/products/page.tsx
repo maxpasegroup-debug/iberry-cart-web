@@ -3,7 +3,7 @@ import Link from "next/link";
 import { PackageSearch } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import EmptyState from "@/components/EmptyState";
-import { apiFetchSafe } from "@/lib/server-fetch";
+import { apiFetch } from "@/lib/server-fetch";
 import type { Product } from "@/lib/types";
 
 export const metadata: Metadata = {
@@ -12,7 +12,12 @@ export const metadata: Metadata = {
 };
 
 export default async function ProductsPage() {
-  const products = await apiFetchSafe<Product[]>("/api/products", []);
+  let products: Product[] = [];
+  try {
+    products = await apiFetch<Product[]>("/api/products");
+  } catch {
+    products = [];
+  }
 
   return (
     <div className="min-h-screen bg-[#F3E8FF] pb-[81px] lg:pb-10">
@@ -24,8 +29,8 @@ export default async function ProductsPage() {
       {products.length === 0 ? (
         <div className="mt-5">
           <EmptyState
-            title="No products yet"
-            description="We are restocking the catalog. Check the homepage for featured picks or try again soon."
+            title="No products available"
+            description="We are restocking the catalog. Check back soon or browse from the home page."
             icon={<PackageSearch className="h-14 w-14 stroke-[1.25]" aria-hidden />}
             action={
               <Link

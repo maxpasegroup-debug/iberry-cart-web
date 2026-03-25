@@ -1,6 +1,7 @@
 "use client";
 
 import { Eye, EyeOff } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { withCsrfHeaders } from "@/lib/csrf-client";
@@ -97,7 +98,22 @@ export default function AuthForm({ mode }: AuthFormProps) {
       </button>
 
       {mode === "login" ? (
-        <p className="mt-3 rounded-lg bg-[#F3E8FF] p-2 text-xs text-[#6A1B9A]">
+        <p className="mt-3 text-center text-sm text-gray-600">
+          No account?{" "}
+          <Link href="/auth/register" className="font-medium text-[#6A1B9A] underline">
+            Create one
+          </Link>
+        </p>
+      ) : (
+        <p className="mt-3 text-center text-sm text-gray-600">
+          Already have an account?{" "}
+          <Link href="/auth/login" className="font-medium text-[#6A1B9A] underline">
+            Sign in
+          </Link>
+        </p>
+      )}
+      {mode === "login" ? (
+        <p className="mt-2 rounded-lg bg-[#F3E8FF] p-2 text-xs text-[#6A1B9A]">
           Admin credentials are configured via environment variables.
         </p>
       ) : null}

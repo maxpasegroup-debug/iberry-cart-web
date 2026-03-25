@@ -7,7 +7,7 @@ import EmptyState from "@/components/EmptyState";
 import StockIndicator from "@/components/StockIndicator";
 import TrustBadges from "@/components/TrustBadges";
 import WhyChoose from "@/components/WhyChoose";
-import { apiFetchSafe } from "@/lib/server-fetch";
+import { apiFetch } from "@/lib/server-fetch";
 import type { Product } from "@/lib/types";
 import SmartImage from "@/components/SmartImage";
 
@@ -24,15 +24,20 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
 export default async function ProductDetailsPage({ params }: Params) {
   const { slug } = await params;
-  const product = await apiFetchSafe<Product | null>(`/api/products/${slug}`, null);
+  let product: Product | null = null;
+  try {
+    product = await apiFetch<Product>(`/api/products/${slug}`);
+  } catch {
+    product = null;
+  }
 
   if (!product) {
     return (
       <div className="min-h-screen bg-[#F3E8FF] pb-[81px] lg:pb-6">
         <div className="pt-6">
           <EmptyState
-            title="Product unavailable"
-            description="This product could not be loaded right now."
+            title="No products available"
+            description="This product could not be found or is no longer in the catalog."
           />
         </div>
       </div>

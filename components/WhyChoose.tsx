@@ -13,12 +13,10 @@ type WhyChooseProps = {
 
 export default function WhyChoose({ className = "" }: WhyChooseProps) {
   return (
-    <section className={`lg:mx-auto lg:max-w-screen-xl ${className}`}>
-      <h3 className="mx-4 mt-6 text-lg font-semibold font-[Poppins] text-[#6A1B9A] lg:mx-0 lg:mt-7">
-        Why choose iBerryCart
-      </h3>
+    <div className={`mx-auto max-w-7xl px-4 ${className}`}>
+      <h3 className="text-lg font-semibold font-[Poppins] text-[#6A1B9A]">Why choose iBerryCart</h3>
 
-      <div className="mt-3 grid grid-cols-2 gap-4 px-4 lg:mx-0 lg:grid-cols-4 lg:px-0">
+      <div className="mt-3 grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-4">
         {features.map((feature) => {
           const Icon = feature.icon;
 
@@ -37,6 +35,6 @@ export default function WhyChoose({ className = "" }: WhyChooseProps) {
           );
         })}
       </div>
-    </section>
+    </div>
   );
 }
