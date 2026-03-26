@@ -8,8 +8,17 @@ import LocationBar from "@/components/LocationBar";
 import NewArrivals from "@/components/NewArrivals";
 import SearchBar from "@/components/SearchBar";
 import WhyChoose from "@/components/WhyChoose";
+import { apiFetch } from "@/lib/server-fetch";
+import type { Product } from "@/lib/types";
 
-export default function Home() {
+export default async function Home() {
+  let products: Product[] = [];
+  try {
+    products = await apiFetch<Product[]>("/api/products");
+  } catch {
+    products = [];
+  }
+
   return (
     <div className="min-h-screen bg-[#F3E8FF] pb-[81px] lg:pb-0">
       <Header />
@@ -25,7 +34,7 @@ export default function Home() {
       </section>
 
       <section className="py-6 md:py-10">
-        <NewArrivals />
+        <NewArrivals products={products} />
       </section>
 
       <section className="py-6 md:py-10">
@@ -33,7 +42,7 @@ export default function Home() {
       </section>
 
       <section className="py-6 md:py-10">
-        <ComboPacks />
+        <ComboPacks products={products} />
       </section>
 
       <section className="py-6 md:py-10">
@@ -41,7 +50,7 @@ export default function Home() {
       </section>
 
       <section className="py-6 md:py-10">
-        <BestSelling />
+        <BestSelling products={products} />
       </section>
 
       <main className="mx-auto max-w-7xl px-4 pb-6">

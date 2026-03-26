@@ -126,13 +126,13 @@ function signRazorpay(razorpayOrderId, razorpayPaymentId, secret) {
 }
 
 const address = {
-  fullName: "Flow Test User",
+  name: "Flow Test User",
   phone: "9876543210",
   line1: "1 Test Street",
   line2: "Near Checklist",
   city: "Bengaluru",
   state: "Karnataka",
-  postalCode: "560001",
+  pincode: "560001",
   country: "India",
 };
 

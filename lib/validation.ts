@@ -32,16 +32,31 @@ export const cartPatchSchema = z.object({
   quantity: z.number().int().min(0).max(20),
 });
 
+/** Coerce numbers / null from inputs into trimmed strings (phone, PIN, etc.). */
+function asTrimmedString(val: unknown) {
+  if (val === undefined || val === null) return "";
+  return String(val).trim();
+}
+
 export const addressSchema = z.object({
-  fullName: z.string().min(2),
-  phone: z.string().min(8),
-  line1: z.string().min(3),
-  line2: z.string().optional().default(""),
-  city: z.string().min(2),
-  state: z.string().min(2),
-  postalCode: z.string().min(4),
-  country: z.string().min(2).default("India"),
+  name: z.preprocess(asTrimmedString, z.string().min(2, "Please enter your full name.")),
+  phone: z.preprocess(asTrimmedString, z.string().min(8, "Enter a valid phone number (at least 8 digits).")),
+  line1: z.preprocess(asTrimmedString, z.string().min(3, "Enter your street address.")),
+  line2: z.preprocess(asTrimmedString, z.string()),
+  city: z.preprocess(asTrimmedString, z.string().min(2, "Enter your city.")),
+  state: z.preprocess(asTrimmedString, z.string().min(2, "Enter your state.")),
+  pincode: z.preprocess(asTrimmedString, z.string().min(4, "Enter a valid PIN code.")),
+  country: z.preprocess(
+    (val) => (asTrimmedString(val) || "India"),
+    z.string().min(2, "Enter your country."),
+  ),
 });
+
+export function firstZodIssueMessage(error: z.ZodError): string {
+  const issue = error.issues[0];
+  if (issue?.message) return issue.message;
+  return "Please check your details and try again.";
+}
 
 export const orderSchema = z.object({
   address: addressSchema,

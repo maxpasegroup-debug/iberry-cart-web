@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 const banners = [
@@ -7,23 +8,27 @@ const banners = [
     title: "Pure Nature in Every Sip",
     subtitle: "Premium Tea Collection",
     button: "Shop Tea",
+    href: "/categories/tea",
   },
   {
     title: "Kerala Premium Spices",
     subtitle: "Direct from Farms",
     button: "Shop Spices",
+    href: "/categories/spices",
   },
   {
     title: "Organic Honey Collection",
     subtitle: "Raw Forest Honey",
     button: "Shop Honey",
+    href: "/categories/honey",
   },
   {
     title: "Fresh Coffee Powder",
     subtitle: "Authentic South Indian Coffee",
     button: "Shop Coffee",
+    href: "/categories/coffee",
   },
-];
+] as const;
 
 export default function HeroSlider() {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -45,12 +50,12 @@ export default function HeroSlider() {
           <div className="max-w-[62%] md:max-w-[55%]">
             <h2 className="text-lg font-semibold leading-tight md:text-2xl">{currentBanner.title}</h2>
             <p className="mt-2 text-sm text-white/90 md:text-base">{currentBanner.subtitle}</p>
-            <button
-              type="button"
-              className="mt-4 rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#6A1B9A] md:px-5"
+            <Link
+              href={currentBanner.href}
+              className="mt-4 inline-flex rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#6A1B9A] shadow-sm transition hover:bg-white/95 md:px-5"
             >
               {currentBanner.button}
-            </button>
+            </Link>
           </div>
 
           <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-full bg-white/25 md:h-28 md:w-28">

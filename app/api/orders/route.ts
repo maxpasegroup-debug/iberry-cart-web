@@ -4,7 +4,7 @@ import { connectToDatabase } from "@/lib/db";
 import { errorResponse, successResponse } from "@/lib/api-response";
 import { getOrCreateSessionId } from "@/lib/session";
 import { getAuthUserFromCookie } from "@/lib/auth";
-import { orderSchema } from "@/lib/validation";
+import { firstZodIssueMessage, orderSchema } from "@/lib/validation";
 import { calculateCartTotals } from "@/lib/cart";
 import CartModel from "@/models/Cart";
 import OrderModel from "@/models/Order";
@@ -56,7 +56,7 @@ export async function POST(req: Request) {
     const parsed = orderSchema.safeParse(body);
 
     if (!parsed.success) {
-      return errorResponse("Invalid order payload", 400, parsed.error.flatten());
+      return errorResponse(firstZodIssueMessage(parsed.error), 400, parsed.error.flatten());
     }
 
     sessionId = await getOrCreateSessionId();

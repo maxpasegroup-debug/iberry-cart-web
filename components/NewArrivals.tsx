@@ -1,16 +1,12 @@
 import ProductCard from "@/components/ProductCard";
 import EmptyState from "@/components/EmptyState";
-import { apiFetch } from "@/lib/server-fetch";
 import type { Product } from "@/lib/types";
 
-export default async function NewArrivals() {
-  let products: Product[] = [];
-  try {
-    products = await apiFetch<Product[]>("/api/products");
-  } catch {
-    products = [];
-  }
+type NewArrivalsProps = {
+  products: Product[];
+};
 
+export default function NewArrivals({ products }: NewArrivalsProps) {
   const arrivals = products.slice(0, 8);
 
   return (
@@ -21,10 +17,7 @@ export default async function NewArrivals() {
 
       {arrivals.length === 0 ? (
         <div className="mt-3">
-          <EmptyState
-            title="No products available"
-            description="Check back soon — new items will show here once they are added to the catalog."
-          />
+          <EmptyState title="No products available" description="Add products in the admin catalog to list them here." />
         </div>
       ) : (
         <div className="mt-3 flex gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:grid lg:grid-cols-4 lg:gap-4 lg:overflow-visible lg:pb-0">

@@ -112,11 +112,6 @@ export default function AuthForm({ mode }: AuthFormProps) {
           </Link>
         </p>
       )}
-      {mode === "login" ? (
-        <p className="mt-2 rounded-lg bg-[#F3E8FF] p-2 text-xs text-[#6A1B9A]">
-          Admin credentials are configured via environment variables.
-        </p>
-      ) : null}
       {message ? <p className="mt-2 text-xs text-gray-500">{message}</p> : null}
     </form>
   );

@@ -1,8 +1,15 @@
 import { connectToDatabase } from "@/lib/db";
 import { errorResponse, successResponse } from "@/lib/api-response";
 import { getAuthUserFromCookie } from "@/lib/auth";
-import { addressSchema } from "@/lib/validation";
+import { addressSchema, firstZodIssueMessage } from "@/lib/validation";
 import AddressModel from "@/models/Address";
+
+/** Older documents may use fullName / postalCode. */
+function normalizeAddressDoc(doc: Record<string, unknown>) {
+  const name = (doc.name ?? doc.fullName ?? "") as string;
+  const pincode = (doc.pincode ?? doc.postalCode ?? "") as string;
+  return { ...doc, name, pincode };
+}
 
 export async function GET() {
   try {
@@ -13,7 +20,10 @@ export async function GET() {
     const addresses = await AddressModel.find({ user: authUser.userId })
       .sort({ isDefault: -1, createdAt: -1 })
       .lean();
-    return successResponse(addresses);
+    const normalized = addresses.map((a) =>
+      normalizeAddressDoc(a as unknown as Record<string, unknown>),
+    );
+    return successResponse(normalized);
   } catch (error) {
     return errorResponse("Failed to fetch addresses", 500, String(error));
   }
@@ -28,7 +38,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const parsed = addressSchema.safeParse(body);
     if (!parsed.success) {
-      return errorResponse("Invalid address payload", 400, parsed.error.flatten());
+      return errorResponse(firstZodIssueMessage(parsed.error), 400, parsed.error.flatten());
     }
 
     const address = await AddressModel.create({

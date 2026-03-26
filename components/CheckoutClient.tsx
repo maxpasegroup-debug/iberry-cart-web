@@ -17,19 +17,19 @@ declare global {
 }
 
 type SimpleAddress = {
-  fullName: string;
+  name: string;
   phone: string;
   line1: string;
   city: string;
-  postalCode: string;
+  pincode: string;
 };
 
 const initialAddress: SimpleAddress = {
-  fullName: "",
+  name: "",
   phone: "",
   line1: "",
   city: "",
-  postalCode: "",
+  pincode: "",
 };
 
 function lineUnitPrice(product: { price: number; discountPrice?: number | null }) {
@@ -71,11 +71,11 @@ export default function CheckoutClient() {
   }
 
   function validateAddress(): string | null {
-    if (address.fullName.trim().length < 2) return "Please enter your full name.";
-    if (address.phone.trim().length < 8) return "Please enter a valid phone number.";
+    if (address.name.trim().length < 2) return "Please enter your full name.";
+    if (String(address.phone).trim().length < 8) return "Please enter a valid phone number.";
     if (address.line1.trim().length < 3) return "Please enter your full address.";
     if (address.city.trim().length < 2) return "Please enter your city.";
-    if (address.postalCode.trim().length < 4) return "Please enter a valid PIN code.";
+    if (String(address.pincode).trim().length < 4) return "Please enter a valid PIN code.";
     return null;
   }
 
@@ -95,13 +95,13 @@ export default function CheckoutClient() {
     setSubmitting(true);
 
     const addressPayload = {
-      fullName: address.fullName.trim(),
-      phone: address.phone.trim(),
+      name: address.name.trim(),
+      phone: String(address.phone).trim(),
       line1: address.line1.trim(),
       line2: "",
       city: address.city.trim(),
       state: "Not Specified",
-      postalCode: address.postalCode.trim(),
+      pincode: String(address.pincode).trim(),
       country: "India",
     };
 
@@ -152,7 +152,7 @@ export default function CheckoutClient() {
         description: `Order payment`,
         order_id: razorpayOrderId,
         prefill: {
-          name: addressPayload.fullName,
+          name: addressPayload.name,
           contact: addressPayload.phone,
         },
         theme: { color: "#6A1B9A" },
@@ -262,8 +262,8 @@ export default function CheckoutClient() {
                 <input
                   className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none ring-[#6A1B9A]/30 focus:border-[#6A1B9A] focus:ring-2"
                   autoComplete="name"
-                  value={address.fullName}
-                  onChange={(e) => updateField("fullName", e.target.value)}
+                  value={address.name}
+                  onChange={(e) => updateField("name", e.target.value)}
                   placeholder="Name"
                 />
               </label>
@@ -305,8 +305,8 @@ export default function CheckoutClient() {
                   className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none ring-[#6A1B9A]/30 focus:border-[#6A1B9A] focus:ring-2"
                   inputMode="numeric"
                   autoComplete="postal-code"
-                  value={address.postalCode}
-                  onChange={(e) => updateField("postalCode", e.target.value)}
+                  value={address.pincode}
+                  onChange={(e) => updateField("pincode", e.target.value)}
                   placeholder="PIN code"
                 />
               </label>

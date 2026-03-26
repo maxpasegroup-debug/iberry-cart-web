@@ -20,13 +20,13 @@ const OrderSchema = new Schema(
     idempotencyKey: { type: String, default: null, index: true },
     items: { type: [OrderItemSchema], required: true },
     address: {
-      fullName: String,
+      name: String,
       phone: String,
       line1: String,
       line2: String,
       city: String,
       state: String,
-      postalCode: String,
+      pincode: String,
       country: String,
     },
     status: {
